@@ -1,0 +1,46 @@
+/* Pairyx — global styles
+   Ported from the design handoff <style> block. The original responsive rules
+   targeted inline-style substrings (e.g. [style*="display: grid"]) that only
+   matched because the prototype runtime re-serialized inline styles. Here they
+   are rebuilt as robust class-based rules (.px-grid / .px-wrap / .px-navdiv),
+   and the style-hover="" attributes are ported to real :hover rules. */
+
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: #071023;
+  color: #F2F2F4;
+  font-family: 'Schibsted Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+::selection { background: rgba(249,211,138,0.35); color: #fff; }
+
+/* Side-card sheen sweep (triggered by .is-on, toggled in app.js) */
+@keyframes px-sheen { 0% { left: -70%; } 100% { left: 130%; } }
+.px-sidecard.is-on .px-sidesheen { animation: px-sheen .85s cubic-bezier(.22,.7,.3,1); }
+
+/* Hover states (ported from the prototype's style-hover="" attributes) */
+.px-navlogo { transition: opacity .25s; }
+.px-navlogo:hover { opacity: 0.8; }
+.px-navlink:hover { color: #FFFFFF !important; }
+#px-navcta:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(249,211,138,0.45); }
+.px-btn-light:hover { transform: translateY(-2px); box-shadow: 0 16px 50px rgba(249,211,138,0.35); }
+.px-cta-ghost:hover { border-color: rgba(255,255,255,0.38) !important; background: rgba(255,255,255,0.05) !important; }
+.px-footlink:hover { color: #F2F2F4 !important; }
+
+/* Responsive */
+@media (max-width: 920px) {
+  .px-grid { grid-template-columns: 1fr !important; gap: 44px !important; }
+  section:not([data-screen-label="Hero"]) { padding-top: 86px !important; padding-bottom: 86px !important; }
+}
+@media (max-width: 720px) {
+  #px-navpill .px-navlink { display: none !important; }
+  #px-navpill .px-navdiv { display: none !important; }
+  #px-navpill > a[href="#top"] { font-size: 22px !important; padding: 0 6px 0 8px !important; }
+  #px-navpill { gap: 4px !important; padding: 6px 6px 6px 10px !important; }
+  #px-nav > div { padding-left: 18px !important; padding-right: 18px !important; }
+}
+@media (max-width: 480px) {
+  .px-wrap { padding-left: 20px !important; padding-right: 20px !important; }
+}

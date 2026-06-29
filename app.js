@@ -90,39 +90,63 @@ class PairyxSite {
     const pre=document.getElementById('px-ascii'); if(!pre) return;
     pre.style.background='linear-gradient(135deg,#8BA4FF 0%,#F9C87A 60%,#F9D38A 100%)'; pre.style.webkitBackgroundClip='text'; pre.style.backgroundClip='text'; pre.style.webkitTextFillColor='transparent'; pre.style.color='transparent';
     const W=110,H=54; const chars=' .,-~:;=!*#$@'; const sm=this.cfg.reduceMotion?0.4:1;
-    let idleA=0, idleB=0, scrollEased=(window.scrollY||0), running=true, last=0;
+    let idleA=0, scrollEased=(window.scrollY||0), running=true, last=0;
     let mX=-9999, mY=-9999, hover=0;
-    const R1=1,R2=2,K2=5; const K1=W*K2*3/(8*(R1+R2));
+    const K2=6, K1=126; const XOFF=8;
+
+    // --- Pairyx "P" monogram, sampled into a binary mask, then extruded to 3D ---
+    const MW=128, MH=128, MB64="AAAAB//////////gAAAAAAAAAP///////////wAAAAAAAAP////////////gAAAAAAAf////////////+AAAAAAAP/////////////4AAAAAAP//////////////gAAAAAH//////////////+AAAAAH///////////////4AAAAD////////////////AAAAB////////////////4AAAA/////////////////gAAAf////////////////8AAAP/////////////////gAAH///gAAAAAAAAAH///8AAB///AAAAAAAAAAAP///gAA///AAAAAAAAAAAAf//4AAf//AAAAAAAAAAAAB///AAH//gAAAAAAAAAAAAH//4AD//wAAAAAAAAAAAAA///AA//4AAAAAAAAAAAAAD//wAf/8AAAAAAAAAAAAAAf/+AH/+AAAAAAAAAAAAAAD//wD//AAAAAAAAAAAAAAAf/8A//wAAAAAAAAAAAAAAD//gP/4AAAAAAAAAAAAAAAf/4H/8AAAAAAAAAAAAAAAH//B//AAAAAAAAAAAAAAAA//wf/wAAAAAAAAAAAAAAAH/+H/4AAAAAAAAAAAAAAAB//h/+AAAAAAAAAAAAAAAAP/4f/gAAAAAAAAAAAAAAAD//P/4AAAAAAAAAAAAAAAAf/z/8AAAAAAAAAAAAAAAAH/8//AAAAAAAAAAAAAAAAA//v/wAAAAAAAAAAAAAAAAP/7/8AAAAAAAAAAAAAAAAD/+//AAAAAAAAAAAAAAAAAf/v/wAAAAAAAAAAAAAAAAH/7/8AAAAAAAAAAAAAAAAB////AAAAAAAAAAAAAAAAAf///wAAAAAAAAAAAAAAAAH///8AAAAAAAAAAAAAAAAB////AAAAAAAAAAAAAAAAAf///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAB////AAAAAAAAAAAAAAAAAf///wAAAAAAAAAAAAAAAAH///8AAAAB///////8AAAB////AAAAD///////+AAAAf/v/wAAAD////////AAAAH/7/4AAAD////////wAAAB/+/8AAAB////////4AAAA//v/AAAA////////8AAAAP/7/gAAAf////////AAAAH/8/wAAAP////////gAAAB//P8AAAD////////wAAAAf/z+AAAB////////8AAAAP/4/AAAA////////+AAAAD/+PwAAAP///////+AAAAB//j4AAAH//8AAAAAAAAAA//w8AAAD//4AAAAAAAAAAP/8PAAAB//4AAAAAAAAAAH/+DgAAAf/8AAAAAAAAAAB//g4AAAP/+AAAAAAAAAAA//wMAAAD//AAAAAAAAAAAf/8CAAAB//wAAAAAAAAAAP/+AAAAA//4AAAAAAAAAAD//gAAAAP/8AAAAAAAAAAB//wAAAAH//AAAAAAAAAAA//8AAAAD//gAAAAAAAAAAP/+AAAAA//4AAAAAAAAAAH//AAAAAf/8AAAAAAAAAAD//wAAAAP/+AAAAAAAAAAB//4AAAAD//gAAAAAAAAAA//8AAAAB//wAAAAAAAAAAf/+AAAAA//4AAAAAAAAAAP//AAAAAP/+AAAAAAAAAAP//wAAAAH//AAAAAAAAAAH//4AAAAD//gAAAAAAAAAD//8AAAAA//4AAAAAAAAAB//+AAAAAf/8AAAAAAAAAB///gAAAAH/+AAAAAAAAAA///gAAAAD//gAAAAAAAAB///wAAAAB//wAAAAAAAAB///8AAAAAf/4AAAAAAAAH///8AAAAAP/+AAAAP///////+AAAAAH//AAAAH////////AAAAAB//gAAAB////////gAAAAA//4AAAA////////wAAAAAf/8AAAAf///////wAAAAAH/+AAAAH///////wAAAAAD//gAAAD///////4AAAAAB//wAAAB///////4AAAAAAf/8AAAAf//////4AAAAAAP/+AAAAP//////4AAAAAAH//AAAAH//////wAAAAAAB//wAAAB//////gAAAAAAA//4AAAAH////gAAAAAAAAP/8AAAAAAAAAAAAAAAAAAH//AAAAAAAAAAAAAAAAAAD//gAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAf/4AAAAAAAAAAAAAAAAAAP/+AAAAAAAAAAAAAAAAAAD//AAAAAAAAAAAAAAAAAAA//wAAAAAAAAAAAAAAAAAAP/4AAAAAAAAAAAAAAAAAAD/8AAAAAAAAAAAAAAAAAAAf/AAAAAAAAAAAAAAAAAAAH/gAAAAAAAAAAAAAAAAAAB/wAAAAAAAAAAAAAAAAAAA/8AAAAAAAAAAAAAAAAAAAP+AAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAA/wAAAAAAAAAAAAAAAAAAAH4AAAAAAAAAAAAAAAAAAAD8AAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAPgAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAA=";
+    const raw=atob(MB64); const mask=new Uint8Array(MW*MH);
+    for(let i=0;i<mask.length;i++){ mask[i]=(raw.charCodeAt(i>>3)>>(7-(i&7)))&1; }
+    const at=(x,y)=> (x<0||y<0||x>=MW||y>=MH)?0:mask[y*MW+x];
+
+    // build the extruded point cloud once: front face, back face, silhouette walls
+    const pts=[]; const SCALE=3.5; const s=SCALE/MW; const cxm=(MW-1)/2, cym=(MH-1)/2; const D=0.55;
+    const STEPF=1;                       // face sampling density
+    for(let y=0;y<MH;y+=STEPF){ for(let x=0;x<MW;x+=STEPF){ if(!at(x,y)) continue;
+      const mx=(x-cxm)*s, my=(cym-y)*s;
+      pts.push(mx,my, D, 0,0,1);         // front face
+      pts.push(mx,my,-D, 0,0,-1);        // back face
+    }}
+    const ZW=12;                          // z-samples per wall column
+    for(let y=0;y<MH;y++){ for(let x=0;x<MW;x++){ if(!at(x,y)) continue;
+      const eL=!at(x-1,y), eR=!at(x+1,y), eU=!at(x,y-1), eD=!at(x,y+1);
+      if(!(eL||eR||eU||eD)) continue;     // interior cell -> no wall
+      let nx=(eR?1:0)-(eL?1:0), ny=(eU?1:0)-(eD?1:0); const nl=Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+      const mx=(x-cxm)*s, my=(cym-y)*s;
+      for(let k=0;k<=ZW;k++){ const z=-D+(2*D)*k/ZW; pts.push(mx,my,z, nx,ny,0); }
+    }}
+    const P=new Float32Array(pts); const NP=pts.length/6;
+
     const onMove=(e)=>{ mX=e.clientX; mY=e.clientY; };
     window.addEventListener('mousemove',onMove); this._cleanup.push(()=>window.removeEventListener('mousemove',onMove));
     const obs=new IntersectionObserver(es=>es.forEach(e=>{ running=e.isIntersecting; if(!running) this._asciiHover=false; }),{threshold:0.02}); obs.observe(pre); this._cleanup.push(()=>obs.disconnect());
     let id;
     const loop=(t)=>{ id=requestAnimationFrame(loop); if(!running) return; if(t-last<32) return; last=t;
       const sy=window.scrollY||window.pageYOffset||0; scrollEased+=(sy-scrollEased)*0.028;
-      idleA+=0.0052*sm;
+      idleA+=0.0078*sm;
       const A=idleA + scrollEased*0.0017;
-      const tilt=-0.20; const cT=Math.cos(tilt), sT=Math.sin(tilt);
+      const tilt=-0.16; const cT=Math.cos(tilt), sT=Math.sin(tilt);
       const rect=pre.getBoundingClientRect(); let inside=false, cuX=0, cuY=0;
       if(rect.width>0){ const cw=rect.width/W, chh=rect.height/H; const lx=(mX-rect.left)/cw, ly=(mY-rect.top)/chh; if(lx>=-5&&lx<=W+5&&ly>=-5&&ly<=H+5){ inside=true; cuX=lx; cuY=ly; } }
       hover += ((inside?1:0)-hover)*0.1; this._asciiHover=inside;
-      const b=new Array(W*H).fill(' '); const z=new Array(W*H).fill(0);
+      const b=new Array(W*H).fill(' '); const zb=new Array(W*H).fill(0);
       const cA=Math.cos(A),sA=Math.sin(A);
-      for(let th=0;th<6.2832;th+=0.05){ const ct=Math.cos(th),st=Math.sin(th);
-        for(let ph=0;ph<6.2832;ph+=0.015){ const cp=Math.cos(ph),sp=Math.sin(ph);
-          const circ=R2+R1*ct;
-          const X0=circ*cp, Y0=circ*sp, Z0=R1*st;
-          const X1=X0*cA+Z0*sA, Z1=-X0*sA+Z0*cA, Y1=Y0;
-          const Y2=Y1*cT-Z1*sT, Z2=Y1*sT+Z1*cT, X2=X1;
-          const ooz=1/(K2+Z2);
-          const xp=Math.floor(W/2+K1*ooz*X2); const yp=Math.floor(H/2-K1*ooz*Y2*0.52);
-          const nx0=ct*cp, ny0=ct*sp, nz0=st;
-          const nx1=nx0*cA+nz0*sA, nz1=-nx0*sA+nz0*cA, ny1=ny0;
-          const ny2=ny1*cT-nz1*sT, nz2=ny1*sT+nz1*cT;
-          const L=ny2*0.46 - nz2*0.86;
-          if(yp>=0&&yp<H&&xp>=0&&xp<W){ const idx=xp+W*yp; if(ooz>z[idx]){ z[idx]=ooz; let lum=L*8.5;
-            if(hover>0.01){ const ddx=xp-cuX, ddy=(yp-cuY)*1.55; const dd=Math.sqrt(ddx*ddx+ddy*ddy); const rad=13; if(dd<rad){ lum += (1-dd/rad)*7.5*hover; } }
-            lum=Math.floor(lum); if(lum<0) lum=0; if(lum>=chars.length) lum=chars.length-1; b[idx]=chars[lum]; } }
-        }
+      const Lx=0.30, Ly=0.42, Lz=-0.86;
+      for(let i=0;i<NP;i++){ const o=i*6;
+        const x=P[o],y=P[o+1],z=P[o+2], nx=P[o+3],ny=P[o+4],nz=P[o+5];
+        const x1=x*cA+z*sA, z1=-x*sA+z*cA, y1=y;
+        const y2=y1*cT-z1*sT, z2=y1*sT+z1*cT, x2=x1;
+        const ooz=1/(K2+z2);
+        const xp=Math.floor(W/2+XOFF+K1*ooz*x2), yp=Math.floor(H/2-K1*ooz*y2*0.52);
+        if(xp<0||xp>=W||yp<0||yp>=H) continue;
+        const idx=xp+W*yp; if(ooz<=zb[idx]) continue; zb[idx]=ooz;
+        const nx1=nx*cA+nz*sA, nz1=-nx*sA+nz*cA, ny1=ny;
+        const ny2=ny1*cT-nz1*sT, nz2=ny1*sT+nz1*cT, nx2=nx1;
+        const Ldot=nx2*Lx+ny2*Ly+nz2*Lz;
+        let lum=2 + (Ldot*0.5+0.5)*9.2;
+        if(hover>0.01){ const ddx=xp-cuX, ddy=(yp-cuY)*1.55; const dd=Math.sqrt(ddx*ddx+ddy*ddy); const rad=13; if(dd<rad){ lum += (1-dd/rad)*7.5*hover; } }
+        lum=Math.floor(lum); if(lum<0)lum=0; if(lum>=chars.length)lum=chars.length-1; b[idx]=chars[lum];
       }
       let out=''; for(let i=0;i<H;i++) out+=b.slice(i*W,i*W+W).join('')+'\n';
       pre.textContent=out;

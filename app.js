@@ -15,7 +15,7 @@ class PairyxSite {
     this.injectDefs();
     requestAnimationFrame(() => {
       const safe = (fn) => { try { fn.call(this); } catch(e){ console.warn('px init', e); } };
-      safe(this.initNav); safe(this.initDots); safe(this.initAscii); safe(this.initNetwork);
+      safe(this.initNav); safe(this.initAscii); safe(this.initNetwork);
       safe(this.initRadar); safe(this.initMeta); safe(this.initDeal); safe(this.initStruct); safe(this.initMatch); safe(this.initInterview); safe(this.initSides); safe(this.initFounders); safe(this.initScroll);
       this._onResize = () => this._resizers.forEach(r => { try { r(); } catch(e){} });
       window.addEventListener('resize', this._onResize);

@@ -56,22 +56,19 @@ class PairyxSite {
     let w=0,h=0,dots=[];
     const resize=()=>{ const dpr=Math.min(window.devicePixelRatio||1,2); const r=canvas.getBoundingClientRect(); w=r.width;h=r.height; canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); dots=[]; for(let y=sp;y<h;y+=sp){ for(let x=sp;x<w;x+=sp){ dots.push({bx:x,by:y}); } } };
     this._resizers.push(resize); resize();
-    let tmx=-9999,tmy=-9999,mxv=-9999,myv=-9999; let ripples=[];
+    let tmx=-9999,tmy=-9999,mxv=-9999,myv=-9999;
     const onMove=(e)=>{ tmx=e.clientX; tmy=e.clientY; };
-    const onDown=(e)=>{ ripples.push({x:e.clientX,y:e.clientY,t:performance.now()}); if(ripples.length>6) ripples.shift(); };
-    window.addEventListener('mousemove',onMove); window.addEventListener('mousedown',onDown);
-    this._cleanup.push(()=>{ window.removeEventListener('mousemove',onMove); window.removeEventListener('mousedown',onDown); });
+    window.addEventListener('mousemove',onMove);
+    this._cleanup.push(()=>{ window.removeEventListener('mousemove',onMove); });
     const R=155; let id;
     const loop=()=>{ id=requestAnimationFrame(loop); if(!w) return;
       if(mxv<-9000){ mxv=tmx; myv=tmy; } else { mxv+=(tmx-mxv)*0.12; myv+=(tmy-myv)*0.12; }
-      ctx.clearRect(0,0,w,h); const now=performance.now();
-      ripples=ripples.filter(rp=> now-rp.t < 1700);
+      ctx.clearRect(0,0,w,h);
       const ng=this._navGlow; this._ngI=(this._ngI||0)+(((ng&&ng.on)?1:0)-(this._ngI||0))*0.1; const ngI=this._ngI;
       for(let i=0;i<dots.length;i++){ const d=dots[i];
         let bright=0.05, scale=1, ox=0, oy=0;
         const dx=d.bx-mxv, dy=d.by-myv; const dist=Math.sqrt(dx*dx+dy*dy);
         if(dist<R && !this._asciiHover){ const f=1-dist/R; bright+=f*0.85*glow; scale+=f*1.7; const inv=dist>0.001?1/dist:0; ox+=dx*inv*f*9; oy+=dy*inv*f*9; }
-        for(const rp of ripples){ const age=(now-rp.t)/1000; const front=age*440; const rdx=d.bx-rp.x, rdy=d.by-rp.y; const rd=Math.sqrt(rdx*rdx+rdy*rdy); const band=Math.abs(rd-front); if(band<72){ const rf=(1-band/72)*Math.max(0,1-age/1.7); bright+=rf*0.9*glow; scale+=rf*1.9; const inv=rd>0.001?1/rd:0; ox+=rdx*inv*rf*7; oy+=rdy*inv*rf*7; } }
         let mint=0;
         if(ngI>0.01){ const ndx=d.bx-ng.x, ndy=d.by-ng.y; const ndd=Math.sqrt(ndx*ndx+ndy*ndy); const NR=165; if(ndd<NR){ const nf=(1-ndd/NR); const w2=nf*nf*ngI; bright+=w2*1.0*glow; scale+=w2*1.3; mint=w2; const pull=ndd>0.001?1/ndd:0; ox-=ndx*pull*w2*6; oy-=ndy*pull*w2*6; } }
         if(bright<=0.0501 && scale<=1.001){ ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.beginPath(); ctx.arc(d.bx,d.by,1.1,0,6.2832); ctx.fill(); continue; }
@@ -257,11 +254,7 @@ class PairyxSite {
       inner.style.transform='rotateX('+cRX.toFixed(2)+'deg) rotateY('+cRY.toFixed(2)+'deg) scale('+(1+0.025*eC).toFixed(3)+')';
       if(spot) spot.style.opacity=eC.toFixed(3);
       if(fimg){ fimg.style.transform='scale('+(1+0.06*eImg).toFixed(3)+')'; fimg.style.filter='grayscale('+(1-eImg).toFixed(3)+') brightness('+(0.92+0.21*eImg).toFixed(3)+') saturate('+(0.2+0.95*eImg).toFixed(2)+') contrast('+(1+0.05*eImg).toFixed(3)+')'; }
-      ctx.clearRect(0,0,w,h);
-      const speed=(0.3+eC*1.5)*sm; const maxd=Math.min(w,h)*0.52; const sx=cRY*0.7, sy=-cRX*0.7;
-      for(const nd of nodes){ nd.x+=nd.vx*speed; nd.y+=nd.vy*speed; if(nd.x<0||nd.x>w) nd.vx*=-1; if(nd.y<0||nd.y>h) nd.vy*=-1; nd.x=Math.max(0,Math.min(w,nd.x)); nd.y=Math.max(0,Math.min(h,nd.y)); }
-      for(let a=0;a<nodes.length;a++){ for(let b=a+1;b<nodes.length;b++){ const dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y; const d=Math.sqrt(dx*dx+dy*dy); if(d<maxd){ const op=(1-d/maxd)*(0.1+0.5*eC); ctx.strokeStyle='rgba('+accent+','+op+')'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(nodes[a].x+sx,nodes[a].y+sy); ctx.lineTo(nodes[b].x+sx,nodes[b].y+sy); ctx.stroke(); } } }
-      for(const nd of nodes){ ctx.globalCompositeOperation='lighter'; const rr=5+9*eC; const g=ctx.createRadialGradient(nd.x+sx,nd.y+sy,0,nd.x+sx,nd.y+sy,rr); g.addColorStop(0,'rgba('+accent+','+(0.45+0.4*eC)+')'); g.addColorStop(1,'rgba('+accent+',0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(nd.x+sx,nd.y+sy,rr,0,6.2832); ctx.fill(); ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba('+accent+',0.9)'; ctx.beginPath(); ctx.arc(nd.x+sx,nd.y+sy,1.8,0,6.2832); ctx.fill(); }
+      // network overlay removed — no dots over the founder photos (tilt + grayscale→color hover kept)
     };
     id=requestAnimationFrame(loop); this._cleanup.push(()=>cancelAnimationFrame(id));
   }

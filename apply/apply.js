@@ -1,17 +1,17 @@
 /**
  * Pairyx — /apply
  *
- * Sign-in (Supabase email + password, on this page) + a multi-step client
- * intake form.
+ * A multi-step client intake form. No login for now — anyone with the link
+ * can fill it out; the form's own "best email to reach you" field is what
+ * identifies the submitter.
  *
  * This runs on GitHub Pages, which serves static files only — there is no
  * server of ours in the request path. That shapes two things:
  *
- *   1. Auth is Supabase's hosted auth, called from the browser. The anon key
+ *   1. Submissions write to Supabase directly from the browser. The anon key
  *      below is PUBLIC by design; row-level security in Postgres is what
- *      actually protects the data, not the secrecy of this key. Email only
- *      leaves this page for account confirmation and password reset — normal
- *      sign-in never requires leaving the form.
+ *      actually protects the data (insert-only, no read), not the secrecy
+ *      of this key.
  *   2. Email delivery goes through Web3Forms, because a static page cannot
  *      send mail itself. Submissions are written to Supabase FIRST, so a
  *      failed email never loses an application.
@@ -38,18 +38,15 @@ const WEB3FORMS_KEY = 'c25cce79-b66b-4fd0-9639-9ee6ba2147a4'
 
 /* ══════════════════════════════════════════════════════════════════════ */
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-})
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const $ = (id) => document.getElementById(id)
-const views = ['loading', 'signin', 'reset', 'sent', 'role', 'form', 'done']
+const views = ['role', 'form', 'done']
 function show(name) {
   for (const v of views) $(`view-${v}`).hidden = v !== name
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-let session = null
 let role = null
 let isPreview = false
 let step = 0
@@ -254,8 +251,7 @@ function prettyBody() {
   const lines = [
     `${role === 'brand' ? 'BRAND' : 'CREATOR'} APPLICATION`,
     '',
-    `Account email: ${session.user.email}`,
-    `Submitted:     ${new Date().toLocaleString()}`,
+    `Submitted: ${new Date().toLocaleString()}`,
     '',
   ]
 
@@ -282,12 +278,6 @@ async function submit(e) {
   const { ok, firstBad } = commitStep()
   if (!ok) return flagStep(firstBad)
 
-  if (!session) {
-    errBox.textContent = 'Your sign-in expired. Please sign in again — nothing you typed is lost.'
-    errBox.hidden = false
-    return
-  }
-
   btn.disabled = true
   btn.textContent = 'Sending…'
 
@@ -302,9 +292,8 @@ async function submit(e) {
 
   // Store first. If the email step fails we still have the application.
   const { error: dbError } = await supabase.from('applications').insert({
-    user_id: session.user.id,
     intake_role: role,
-    email: answers.contact_email || session.user.email,
+    email: answers.contact_email,
     answers,
   })
 
@@ -328,9 +317,9 @@ async function submit(e) {
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({
           access_key: WEB3FORMS_KEY,
-          subject: `New ${role} application — ${answers.company_name || answers.display_name || session.user.email}`,
+          subject: `New ${role} application — ${answers.company_name || answers.display_name || answers.contact_email}`,
           from_name: 'Pairyx intake',
-          email: answers.contact_email || session.user.email,
+          email: answers.contact_email,
           message: prettyBody(),
         }),
       })
@@ -345,139 +334,7 @@ async function submit(e) {
   show('done')
 }
 
-/* ────────────────────────────────── auth ────────────────────────────── */
-
-let authMode = 'signin'
-
-function setAuthMode(mode) {
-  authMode = mode
-  $('tab-signin').classList.toggle('active', mode === 'signin')
-  $('tab-signup').classList.toggle('active', mode === 'signup')
-  $('signin-title').textContent = mode === 'signin' ? 'Sign in' : 'Create your account'
-  $('signin-lede').textContent =
-    mode === 'signin'
-      ? 'Sign in to continue your application.'
-      : 'Set a password and you are in — no email link needed.'
-  $('signin-btn').textContent = mode === 'signin' ? 'Sign in' : 'Create account'
-  $('signin-password').autocomplete = mode === 'signin' ? 'current-password' : 'new-password'
-  $('signin-error').hidden = true
-}
-
-async function submitAuth(e) {
-  e.preventDefault()
-  const email = $('signin-email').value.trim()
-  const password = $('signin-password').value
-  const btn = $('signin-btn')
-  const errBox = $('signin-error')
-  errBox.hidden = true
-
-  if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) {
-    errBox.textContent = "That does not look like an email address."
-    errBox.hidden = false
-    return
-  }
-  if (password.length < 8) {
-    errBox.textContent = "Password needs to be at least 8 characters."
-    errBox.hidden = false
-    return
-  }
-
-  btn.disabled = true
-  btn.textContent = authMode === 'signin' ? 'Signing in…' : 'Creating account…'
-
-  if (authMode === 'signin') {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    btn.disabled = false
-    btn.textContent = 'Sign in'
-    if (error) {
-      errBox.textContent = /invalid login credentials/i.test(error.message)
-        ? 'Email or password is wrong. New here? Use "Create account" instead.'
-        : error.message
-      errBox.hidden = false
-    }
-    // Success routes via onAuthStateChange.
-    return
-  }
-
-  const url = new URL(window.location.href)
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { emailRedirectTo: url.origin + url.pathname + (role ? `?role=${role}` : '') },
-  })
-  btn.disabled = false
-  btn.textContent = 'Create account'
-
-  if (error) {
-    errBox.textContent = /already registered|user already exists/i.test(error.message)
-      ? 'That email already has an account. Try signing in instead.'
-      : error.message
-    errBox.hidden = false
-    return
-  }
-
-  if (data.session) return // Confirmations off for this project — routes via onAuthStateChange.
-
-  $('sent-title').textContent = 'Confirm your email.'
-  $('sent-message').textContent =
-    `We sent a confirmation link to ${email}. Open it on this device and you'll land straight back here, signed in.`
-  show('sent')
-}
-
-async function requestPasswordReset() {
-  const email = $('signin-email').value.trim()
-  const errBox = $('signin-error')
-  errBox.hidden = true
-
-  if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) {
-    errBox.textContent = 'Enter your email above first, then click "Forgot password?".'
-    errBox.hidden = false
-    return
-  }
-
-  const url = new URL(window.location.href)
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: url.origin + url.pathname + (role ? `?role=${role}` : ''),
-  })
-
-  if (error) {
-    errBox.textContent = error.message
-    errBox.hidden = false
-    return
-  }
-
-  $('sent-title').textContent = 'Reset link sent.'
-  $('sent-message').textContent = `We emailed a password reset link to ${email}.`
-  show('sent')
-}
-
-async function submitNewPassword(e) {
-  e.preventDefault()
-  const password = $('reset-password').value
-  const btn = $('reset-btn')
-  const errBox = $('reset-error')
-  errBox.hidden = true
-
-  if (password.length < 8) {
-    errBox.textContent = 'Password needs to be at least 8 characters.'
-    errBox.hidden = false
-    return
-  }
-
-  btn.disabled = true
-  btn.textContent = 'Updating…'
-  const { error } = await supabase.auth.updateUser({ password })
-  btn.disabled = false
-  btn.textContent = 'Update password'
-
-  if (error) {
-    errBox.textContent = error.message
-    errBox.hidden = false
-    return
-  }
-
-  routeSignedIn()
-}
+/* ────────────────────────────────── flow ─────────────────────────────── */
 
 function startForm(r) {
   role = r
@@ -495,21 +352,8 @@ function startForm(r) {
   show('form')
 }
 
-function routeSignedIn() {
-  $('px-navcta').hidden = false
-  const wanted = new URL(window.location.href).searchParams.get('role')
-  if (wanted === 'brand' || wanted === 'creator') startForm(wanted)
-  else show('role')
-}
-
 /* ────────────────────────────────── wire up ─────────────────────────── */
 
-$('tab-signin').addEventListener('click', () => setAuthMode('signin'))
-$('tab-signup').addEventListener('click', () => setAuthMode('signup'))
-$('signin-form').addEventListener('submit', submitAuth)
-$('forgot-btn').addEventListener('click', requestPasswordReset)
-$('reset-form').addEventListener('submit', submitNewPassword)
-$('sent-again').addEventListener('click', () => show('signin'))
 $('intake-form').addEventListener('submit', submit)
 
 $('next-btn').addEventListener('click', () => {
@@ -549,52 +393,19 @@ for (const card of document.querySelectorAll('.rolecard')) {
   card.addEventListener('click', () => startForm(card.dataset.role))
 }
 
-$('px-navcta').addEventListener('click', async () => {
-  await supabase.auth.signOut()
-  window.location.href = window.location.pathname
-})
-
-supabase.auth.onAuthStateChange((event, s) => {
-  if (isPreview) return
-  // A reset-password link lands here with a live session in recovery mode.
-  // Route to "set a new password" instead of straight into the form.
-  if (event === 'PASSWORD_RECOVERY') {
-    session = s
-    show('reset')
-    return
-  }
-  if (s) {
-    session = s
-    routeSignedIn()
-    return
-  }
-  // Null means signed out or a failed refresh. Dropping back to sign-in beats
-  // leaving a dead form on screen that only fails at submit.
-  if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
-    session = null
-    $('px-navcta').hidden = true
-    show('signin')
-  }
-})
-
-/** Local-only form preview, so question edits can be checked without email. */
+/** Local-only form preview, so question edits can be checked without saving. */
 const IS_LOCAL = ['localhost', '127.0.0.1', '::1'].includes(location.hostname)
 
-;(async function boot() {
-  const previewRole = new URL(window.location.href).searchParams.get('preview')
+;(function boot() {
+  const params = new URL(window.location.href).searchParams
+  const previewRole = params.get('preview')
   if (IS_LOCAL && (previewRole === 'brand' || previewRole === 'creator')) {
     isPreview = true
-    session = { user: { id: 'preview', email: 'preview@localhost' } }
     startForm(previewRole)
     return
   }
 
-  const { data } = await supabase.auth.getSession()
-  session = data.session
-  if (session) routeSignedIn()
-  else {
-    const wanted = new URL(window.location.href).searchParams.get('role')
-    if (wanted === 'brand' || wanted === 'creator') role = wanted
-    show('signin')
-  }
+  const wanted = params.get('role')
+  if (wanted === 'brand' || wanted === 'creator') startForm(wanted)
+  else show('role')
 })()

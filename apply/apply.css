@@ -130,18 +130,6 @@ h1 {
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
 .stack { display: block; }
 
-/* ---------------------------------------------------------------- auth tabs */
-
-.authtabs { display: flex; gap: 4px; margin: 0 0 26px; padding: 4px; border: 1px solid var(--line);
-  border-radius: 100px; width: fit-content; background: var(--panel-2); }
-.authtab {
-  border: none; background: transparent; color: var(--ink-3); font-family: inherit;
-  font-weight: 600; font-size: 14px; padding: 9px 20px; border-radius: 100px; cursor: pointer;
-  transition: background .25s, color .25s;
-}
-.authtab:hover { color: var(--ink-2); }
-.authtab.active { background: #f2f2f4; color: var(--navy); }
-
 /* ---------------------------------------------------------------- role cards */
 
 .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }

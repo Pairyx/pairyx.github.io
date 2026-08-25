@@ -1,14 +1,17 @@
 /**
  * Pairyx — /apply
  *
- * Sign-in (Supabase magic link) + a multi-step client intake form.
+ * Sign-in (Supabase email + password, on this page) + a multi-step client
+ * intake form.
  *
  * This runs on GitHub Pages, which serves static files only — there is no
  * server of ours in the request path. That shapes two things:
  *
  *   1. Auth is Supabase's hosted auth, called from the browser. The anon key
  *      below is PUBLIC by design; row-level security in Postgres is what
- *      actually protects the data, not the secrecy of this key.
+ *      actually protects the data, not the secrecy of this key. Email only
+ *      leaves this page for account confirmation and password reset — normal
+ *      sign-in never requires leaving the form.
  *   2. Email delivery goes through Web3Forms, because a static page cannot
  *      send mail itself. Submissions are written to Supabase FIRST, so a
  *      failed email never loses an application.
@@ -40,7 +43,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 })
 
 const $ = (id) => document.getElementById(id)
-const views = ['loading', 'signin', 'sent', 'role', 'form', 'done']
+const views = ['loading', 'signin', 'reset', 'sent', 'role', 'form', 'done']
 function show(name) {
   for (const v of views) $(`view-${v}`).hidden = v !== name
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -344,9 +347,26 @@ async function submit(e) {
 
 /* ────────────────────────────────── auth ────────────────────────────── */
 
-async function sendLink(e) {
+let authMode = 'signin'
+
+function setAuthMode(mode) {
+  authMode = mode
+  $('tab-signin').classList.toggle('active', mode === 'signin')
+  $('tab-signup').classList.toggle('active', mode === 'signup')
+  $('signin-title').textContent = mode === 'signin' ? 'Sign in' : 'Create your account'
+  $('signin-lede').textContent =
+    mode === 'signin'
+      ? 'Sign in to continue your application.'
+      : 'Set a password and you are in — no email link needed.'
+  $('signin-btn').textContent = mode === 'signin' ? 'Sign in' : 'Create account'
+  $('signin-password').autocomplete = mode === 'signin' ? 'current-password' : 'new-password'
+  $('signin-error').hidden = true
+}
+
+async function submitAuth(e) {
   e.preventDefault()
   const email = $('signin-email').value.trim()
+  const password = $('signin-password').value
   const btn = $('signin-btn')
   const errBox = $('signin-error')
   errBox.hidden = true
@@ -356,18 +376,69 @@ async function sendLink(e) {
     errBox.hidden = false
     return
   }
+  if (password.length < 8) {
+    errBox.textContent = "Password needs to be at least 8 characters."
+    errBox.hidden = false
+    return
+  }
 
   btn.disabled = true
-  btn.textContent = 'Sending…'
+  btn.textContent = authMode === 'signin' ? 'Signing in…' : 'Creating account…'
+
+  if (authMode === 'signin') {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    btn.disabled = false
+    btn.textContent = 'Sign in'
+    if (error) {
+      errBox.textContent = /invalid login credentials/i.test(error.message)
+        ? 'Email or password is wrong. New here? Use "Create account" instead.'
+        : error.message
+      errBox.hidden = false
+    }
+    // Success routes via onAuthStateChange.
+    return
+  }
 
   const url = new URL(window.location.href)
-  const { error } = await supabase.auth.signInWithOtp({
+  const { data, error } = await supabase.auth.signUp({
     email,
+    password,
     options: { emailRedirectTo: url.origin + url.pathname + (role ? `?role=${role}` : '') },
   })
-
   btn.disabled = false
-  btn.textContent = 'Email me a link'
+  btn.textContent = 'Create account'
+
+  if (error) {
+    errBox.textContent = /already registered|user already exists/i.test(error.message)
+      ? 'That email already has an account. Try signing in instead.'
+      : error.message
+    errBox.hidden = false
+    return
+  }
+
+  if (data.session) return // Confirmations off for this project — routes via onAuthStateChange.
+
+  $('sent-title').textContent = 'Confirm your email.'
+  $('sent-message').textContent =
+    `We sent a confirmation link to ${email}. Open it on this device and you'll land straight back here, signed in.`
+  show('sent')
+}
+
+async function requestPasswordReset() {
+  const email = $('signin-email').value.trim()
+  const errBox = $('signin-error')
+  errBox.hidden = true
+
+  if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) {
+    errBox.textContent = 'Enter your email above first, then click "Forgot password?".'
+    errBox.hidden = false
+    return
+  }
+
+  const url = new URL(window.location.href)
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: url.origin + url.pathname + (role ? `?role=${role}` : ''),
+  })
 
   if (error) {
     errBox.textContent = error.message
@@ -375,8 +446,37 @@ async function sendLink(e) {
     return
   }
 
-  $('sent-email').textContent = email
+  $('sent-title').textContent = 'Reset link sent.'
+  $('sent-message').textContent = `We emailed a password reset link to ${email}.`
   show('sent')
+}
+
+async function submitNewPassword(e) {
+  e.preventDefault()
+  const password = $('reset-password').value
+  const btn = $('reset-btn')
+  const errBox = $('reset-error')
+  errBox.hidden = true
+
+  if (password.length < 8) {
+    errBox.textContent = 'Password needs to be at least 8 characters.'
+    errBox.hidden = false
+    return
+  }
+
+  btn.disabled = true
+  btn.textContent = 'Updating…'
+  const { error } = await supabase.auth.updateUser({ password })
+  btn.disabled = false
+  btn.textContent = 'Update password'
+
+  if (error) {
+    errBox.textContent = error.message
+    errBox.hidden = false
+    return
+  }
+
+  routeSignedIn()
 }
 
 function startForm(r) {
@@ -404,7 +504,11 @@ function routeSignedIn() {
 
 /* ────────────────────────────────── wire up ─────────────────────────── */
 
-$('signin-form').addEventListener('submit', sendLink)
+$('tab-signin').addEventListener('click', () => setAuthMode('signin'))
+$('tab-signup').addEventListener('click', () => setAuthMode('signup'))
+$('signin-form').addEventListener('submit', submitAuth)
+$('forgot-btn').addEventListener('click', requestPasswordReset)
+$('reset-form').addEventListener('submit', submitNewPassword)
 $('sent-again').addEventListener('click', () => show('signin'))
 $('intake-form').addEventListener('submit', submit)
 
@@ -452,6 +556,13 @@ $('px-navcta').addEventListener('click', async () => {
 
 supabase.auth.onAuthStateChange((event, s) => {
   if (isPreview) return
+  // A reset-password link lands here with a live session in recovery mode.
+  // Route to "set a new password" instead of straight into the form.
+  if (event === 'PASSWORD_RECOVERY') {
+    session = s
+    show('reset')
+    return
+  }
   if (s) {
     session = s
     routeSignedIn()

@@ -49,11 +49,13 @@
   <!-- ============================ sign in ============================ -->
   <section id="view-signin" class="view" hidden>
     <p class="eyebrow">Start your application</p>
-    <h1>First, a way to reach you.</h1>
-    <p class="lede">
-      Enter your email and we'll send a sign-in link — no password to remember. The same link brings
-      you back if you don't finish in one sitting.
-    </p>
+    <h1 id="signin-title">Sign in</h1>
+    <p class="lede" id="signin-lede">Sign in to continue, or create an account if this is your first time.</p>
+
+    <div class="authtabs" role="tablist">
+      <button class="authtab active" type="button" id="tab-signin" data-mode="signin">Sign in</button>
+      <button class="authtab" type="button" id="tab-signup" data-mode="signup">Create account</button>
+    </div>
 
     <form id="signin-form" class="stack" novalidate>
       <div class="field">
@@ -61,21 +63,44 @@
         <input id="signin-email" name="email" type="email" required autocomplete="email"
                placeholder="you@company.com" autofocus>
       </div>
-      <button class="btn" type="submit" id="signin-btn">Email me a link</button>
+      <div class="field">
+        <label for="signin-password">Password</label>
+        <input id="signin-password" name="password" type="password" required minlength="8"
+               autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit" id="signin-btn">Sign in</button>
+        <button class="btn ghost" type="button" id="forgot-btn">Forgot password?</button>
+      </div>
     </form>
 
     <div id="signin-error" class="callout warn" hidden></div>
   </section>
 
-  <!-- ============================ link sent ============================ -->
+  <!-- ============================ set / reset password ============================ -->
+  <section id="view-reset" class="view" hidden>
+    <p class="eyebrow">New password</p>
+    <h1>Set a new password.</h1>
+    <p class="lede">Choose a new password for your account.</p>
+
+    <form id="reset-form" class="stack" novalidate>
+      <div class="field">
+        <label for="reset-password">New password</label>
+        <input id="reset-password" name="password" type="password" required minlength="8"
+               autocomplete="new-password" placeholder="••••••••" autofocus>
+      </div>
+      <button class="btn" type="submit" id="reset-btn">Update password</button>
+    </form>
+
+    <div id="reset-error" class="callout warn" hidden></div>
+  </section>
+
+  <!-- ============================ email sent (confirm / reset) ============================ -->
   <section id="view-sent" class="view" hidden>
     <p class="eyebrow">Check your inbox</p>
-    <h1>Link sent.</h1>
-    <p class="lede">
-      We emailed a sign-in link to <strong id="sent-email"></strong>. Open it on this device and
-      you'll land straight back here. It's good for one hour.
-    </p>
-    <button class="btn ghost" type="button" id="sent-again">Use a different address</button>
+    <h1 id="sent-title">Almost there.</h1>
+    <p class="lede" id="sent-message"></p>
+    <button class="btn ghost" type="button" id="sent-again">Back to sign in</button>
   </section>
 
   <!-- ============================ pick a role ============================ -->

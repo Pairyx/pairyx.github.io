@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apply — Pairyx</title>
+<meta name="description" content="Tell Pairyx about your brand or your audience. A few questions, and we come back with matches and the reasoning behind them.">
+<link rel="canonical" href="https://pairyx.co/apply/">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pairyx.co/apply/">
+<meta property="og:title" content="Apply — Pairyx">
+<meta property="og:description" content="Tell Pairyx about your brand or your audience.">
+<meta property="og:image" content="https://pairyx.co/uploads/pairyx-og.png?v=2">
+<meta name="theme-color" content="#071023">
+<link rel="apple-touch-icon" href="../uploads/favicon-big.png?v=4">
+<link rel="icon" type="image/png" sizes="512x512" href="../uploads/favicon-big.png?v=4">
+<link rel="icon" type="image/png" sizes="any" href="../uploads/favicon-big.png?v=4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="apply.css">
+</head>
+<body>
+
+<!-- Same pill as the marketing site. Links point back to the homepage
+     sections with absolute paths, since this page lives one level down. -->
+<nav id="px-nav">
+  <div class="navwrap">
+    <div id="px-navpill">
+      <a class="px-navlogo" href="/"><img src="../uploads/PL-tight.png" alt="Pairyx"></a>
+      <span class="px-navdiv"></span>
+      <a href="/#why" class="px-navlink">Why Pairyx</a>
+      <a href="/#how" class="px-navlink">How it works</a>
+      <a href="/#founders" class="px-navlink">Founders</a>
+      <a href="/#sides" class="px-navlink">For creators</a>
+      <button id="px-navcta" type="button" hidden>Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <!-- ============================ loading ============================ -->
+  <section id="view-loading" class="view">
+    <p class="mono-note">Loading…</p>
+  </section>
+
+  <!-- ============================ sign in ============================ -->
+  <section id="view-signin" class="view" hidden>
+    <p class="eyebrow">Start your application</p>
+    <h1>First, a way to reach you.</h1>
+    <p class="lede">
+      Enter your email and we'll send a sign-in link — no password to remember. The same link brings
+      you back if you don't finish in one sitting.
+    </p>
+
+    <form id="signin-form" class="stack" novalidate>
+      <div class="field">
+        <label for="signin-email">Email address</label>
+        <input id="signin-email" name="email" type="email" required autocomplete="email"
+               placeholder="you@company.com" autofocus>
+      </div>
+      <button class="btn" type="submit" id="signin-btn">Email me a link</button>
+    </form>
+
+    <div id="signin-error" class="callout warn" hidden></div>
+  </section>
+
+  <!-- ============================ link sent ============================ -->
+  <section id="view-sent" class="view" hidden>
+    <p class="eyebrow">Check your inbox</p>
+    <h1>Link sent.</h1>
+    <p class="lede">
+      We emailed a sign-in link to <strong id="sent-email"></strong>. Open it on this device and
+      you'll land straight back here. It's good for one hour.
+    </p>
+    <button class="btn ghost" type="button" id="sent-again">Use a different address</button>
+  </section>
+
+  <!-- ============================ pick a role ============================ -->
+  <section id="view-role" class="view" hidden>
+    <p class="eyebrow">One question first</p>
+    <h1>Which side are you on?</h1>
+    <p class="lede">This decides what we ask you. It takes about five minutes either way.</p>
+
+    <div class="roles">
+      <button class="rolecard" type="button" data-role="brand">
+        <div class="tag">FOR BRANDS</div>
+        <div class="title">I'm looking for creators.</div>
+        <p>Your product, who you want to reach, and what you can spend. Your budget is never shown
+           to creators.</p>
+      </button>
+      <button class="rolecard gold" type="button" data-role="creator">
+        <div class="tag">FOR CREATORS</div>
+        <div class="title">I'm looking for brands.</div>
+        <p>Your niche, who watches you, and the kinds of deals you'll take. We bring you brands
+           worth your name.</p>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================ the form ============================ -->
+  <section id="view-form" class="view" hidden>
+    <p class="eyebrow" id="form-eyebrow"></p>
+    <h1 id="form-title"></h1>
+    <p class="lede" id="form-lede"></p>
+
+    <div class="progress" aria-hidden="true"><span id="form-progress"></span></div>
+
+    <form id="intake-form" novalidate>
+      <div id="form-fields"></div>
+
+      <div id="form-error" class="callout warn" hidden></div>
+
+      <div class="actions">
+        <button class="btn" type="submit" id="submit-btn">Send my application</button>
+        <button class="btn ghost" type="button" id="back-btn">Back</button>
+      </div>
+      <p class="fineprint">
+        We use this to match you and to get in touch. We don't sell it or share it with anyone
+        outside Pairyx.
+      </p>
+    </form>
+  </section>
+
+  <!-- ============================ done ============================ -->
+  <section id="view-done" class="view" hidden>
+    <p class="eyebrow">Received</p>
+    <h1>Got it — thank you.</h1>
+    <p class="lede" id="done-lede"></p>
+    <div class="callout">
+      <strong>What happens next.</strong> A Pairyx founder reads this by hand, not a filter. If
+      there's a fit we'll come back with specific matches and why we picked them. If there isn't,
+      we'll tell you that too.
+    </div>
+    <div class="actions">
+      <a class="btn" href="/">Back to Pairyx</a>
+      <button class="btn ghost" type="button" id="another-btn">Submit another</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <a href="/"><img src="../uploads/pairyxLogo-tight.png" alt="Pairyx"></a>
+  <div class="footlinks">
+    <a href="/#why">Why Pairyx</a>
+    <a href="/#how">How it works</a>
+    <a href="mailto:team@pairyx.co">team@pairyx.co</a>
+  </div>
+  <div class="copy">© 2026 Pairyx</div>
+</footer>
+
+<script type="module" src="apply.js"></script>
+</body>
+</html>

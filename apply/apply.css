@@ -166,7 +166,11 @@ h1 {
 
 .field { margin-bottom: 20px; }
 .field:last-child { margin-bottom: 0; }
-.field label {
+/* Direct child only: a checkbox/radio pill's own <label class="check"> lives
+   nested inside .field (via .checks), and must keep its inline-flex layout —
+   the descendant form of this selector was overriding it on specificity,
+   collapsing the checkbox and its text onto each other with no gap. */
+.field > label {
   display: block; font-size: 14.5px; font-weight: 500; color: var(--ink); margin-bottom: 4px;
 }
 .field .hint { display: block; font-size: 13px; color: var(--ink-3); margin-bottom: 9px; }

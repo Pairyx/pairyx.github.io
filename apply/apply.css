@@ -248,3 +248,17 @@ h1 {
   .fieldset { padding: 20px; }
   .foot { justify-content: center; text-align: center; }
 }
+
+/* ---------------------------------------------------------------- steps */
+
+.stepcount {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px;
+}
+.stepnote {
+  font-size: 14px; color: var(--ink-2); margin: -8px 0 22px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--line);
+}
+/* The required marker has to be legible on its own — colour alone is not a
+   signal for anyone who cannot distinguish it. `title` carries the text. */
+.field .req { color: var(--gold); margin-left: 3px; cursor: help; }

@@ -34,7 +34,7 @@ const SUPABASE_ANON_KEY =
 // Free, ~30 seconds, no account: https://web3forms.com (enter team@pairyx.co,
 // they email you the key). Until it is set, applications still save to
 // Supabase; they just do not land in your inbox.
-const WEB3FORMS_KEY = ''
+const WEB3FORMS_KEY = 'c25cce79-b66b-4fd0-9639-9ee6ba2147a4'
 
 /* ══════════════════════════════════════════════════════════════════════ */
 

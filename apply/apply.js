@@ -1,44 +1,26 @@
 /**
  * Pairyx — /apply
  *
- * A multi-step client intake form. No login for now — anyone with the link
- * can fill it out; the form's own "best email to reach you" field is what
- * identifies the submitter.
- *
- * This runs on GitHub Pages, which serves static files only — there is no
- * server of ours in the request path. That shapes two things:
- *
- *   1. Submissions write to Supabase directly from the browser. The anon key
- *      below is PUBLIC by design; row-level security in Postgres is what
- *      actually protects the data (insert-only, no read), not the secrecy
- *      of this key.
- *   2. Email delivery goes through Web3Forms, because a static page cannot
- *      send mail itself. Submissions are written to Supabase FIRST, so a
- *      failed email never loses an application.
+ * A multi-step client intake form. No login, no database — Web3Forms is the
+ * only backend, since a static GitHub Pages site cannot send mail itself.
+ * A submission that fails to send is just retried by the applicant; there is
+ * no separate store to fall back on.
  *
  * The questions live in forms.js. Edit them there.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.3'
 import { formFor, COPY } from './forms.js'
 
 /* ══════════════════════════════════════════════════════════════════════
    CONFIG
    ══════════════════════════════════════════════════════════════════════ */
 
-const SUPABASE_URL = 'https://qrdpspagttxrsumbnzxa.supabase.co'
-const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZHBzcGFndHR4cnN1bWJuenhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNTc0NzgsImV4cCI6MjEwMjYzMzQ3OH0.YHvqcrnvqRH0khAFGZ3eFUyem9aiE1B97UlEx3W_dRk'
-
 // Web3Forms access key — this is what emails submissions to you.
 // Free, ~30 seconds, no account: https://web3forms.com (enter team@pairyx.co,
-// they email you the key). Until it is set, applications still save to
-// Supabase; they just do not land in your inbox.
+// they email you the key).
 const WEB3FORMS_KEY = 'c25cce79-b66b-4fd0-9639-9ee6ba2147a4'
 
 /* ══════════════════════════════════════════════════════════════════════ */
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const $ = (id) => document.getElementById(id)
 const views = ['role', 'form', 'done']
@@ -290,44 +272,28 @@ async function submit(e) {
     return
   }
 
-  // Store first. If the email step fails we still have the application.
-  const { error: dbError } = await supabase.from('applications').insert({
-    intake_role: role,
-    email: answers.contact_email,
-    answers,
-  })
-
-  if (dbError) {
-    console.error('[apply] save failed', dbError)
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject: `New ${role} application — ${answers.company_name || answers.display_name || answers.contact_email}`,
+        from_name: 'Pairyx intake',
+        email: answers.contact_email,
+        message: prettyBody(),
+      }),
+    })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.message || 'Web3Forms rejected the submission')
+  } catch (err) {
+    console.error('[apply] submission failed', err)
     errBox.textContent =
-      "We could not save that — please try again. If it keeps happening, email team@pairyx.co and we will take it from there."
+      "We could not send that — please try again. If it keeps happening, email team@pairyx.co directly and we will take it from there."
     errBox.hidden = false
     btn.disabled = false
     btn.textContent = 'Send my application'
     return
-  }
-
-  // Then notify. A failure here is logged, not surfaced: the application is
-  // already safe, and telling someone their submission failed when it did not
-  // is worse than a delayed email.
-  if (WEB3FORMS_KEY) {
-    try {
-      await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject: `New ${role} application — ${answers.company_name || answers.display_name || answers.contact_email}`,
-          from_name: 'Pairyx intake',
-          email: answers.contact_email,
-          message: prettyBody(),
-        }),
-      })
-    } catch (err) {
-      console.error('[apply] email notification failed (application was saved)', err)
-    }
-  } else {
-    console.warn('[apply] WEB3FORMS_KEY is not set — saved to Supabase, no email sent.')
   }
 
   $('done-lede').textContent = COPY[role].done

@@ -127,7 +127,7 @@ function renderStep() {
 
   $('form-fields').innerHTML =
     `<fieldset class="fieldset">
-       <legend class="legend">${s.legend}</legend>
+       <div class="legend">${s.legend}</div>
        ${s.note ? `<p class="stepnote">${s.note}</p>` : ''}
        ${s.fields.map(fieldHTML).join('')}
      </fieldset>`

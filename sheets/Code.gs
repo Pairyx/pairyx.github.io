@@ -325,26 +325,45 @@ function writeSheet_(ss, sheet, role, cols) {
     sheet.getRange(2, i + 1).setNote(c.note ? c.label + '\n\n' + c.note : c.label)
   })
 
-  // ── row 1: section bands, merged across each run of same-section columns
+  // ── row 1: section bands, merged across each run of same-section columns.
+  //
+  // A merged band cannot straddle the frozen/unfrozen boundary — Sheets
+  // refuses to freeze "part of a merged cell" — and the first question section
+  // always does, because the frozen region deliberately cuts into it to keep
+  // the applicant's name on screen. So a run crossing the boundary is painted
+  // as two pieces. Titles sit left-aligned, which is what makes the seam
+  // invisible: only the left piece carries text, and a left-aligned title looks
+  // identical whether or not the band behind it is one cell or two.
+  var frozen = frozenCount_(n)
   sheet.getRange(1, 1, 1, n).breakApart().clearContent().clearFormat()
-  var start = 0, alt = 0
+
+  var runs = [], from = 0
   for (var i = 1; i <= n; i++) {
-    var here = cols[i - 1].section
-    var next = i < n ? cols[i].section : null
-    if (here === next) continue
-    var span = sheet.getRange(1, start + 1, 1, i - start)
-    if (i - start > 1) span.merge()
-    var isOps = here === 'Pairyx' || here === 'Working notes'
-    span.setValue(here.toUpperCase())
-      .setBackground(isOps ? C.gold : (alt % 2 ? C.navy2 : C.navy))
-      .setFontColor(isOps ? C.navy : C.gold)
-      .setFontSize(9)
-      .setFontWeight('bold')
-      .setHorizontalAlignment('center')
-      .setVerticalAlignment('middle')
-    if (!isOps) alt++
-    start = i
+    if (i < n && cols[i].section === cols[from].section) continue
+    runs.push({ from: from + 1, to: i, section: cols[from].section })
+    from = i
   }
+
+  var alt = 0
+  runs.forEach(function (run) {
+    var isOps = run.section === 'Pairyx' || run.section === 'Working notes'
+    var pieces = (run.from <= frozen && run.to > frozen)
+      ? [[run.from, frozen], [frozen + 1, run.to]]
+      : [[run.from, run.to]]
+
+    pieces.forEach(function (p, pi) {
+      var span = sheet.getRange(1, p[0], 1, p[1] - p[0] + 1)
+      if (p[1] > p[0]) span.merge()
+      span.setValue(pi === 0 ? run.section.toUpperCase() : '')
+        .setBackground(isOps ? C.gold : (alt % 2 ? C.navy2 : C.navy))
+        .setFontColor(isOps ? C.navy : C.gold)
+        .setFontSize(9)
+        .setFontWeight('bold')
+        .setHorizontalAlignment('left')
+        .setVerticalAlignment('middle')
+    })
+    if (!isOps) alt++
+  })
   sheet.setRowHeight(1, 30)
 
   // ── per column: width, number format, alignment
@@ -374,13 +393,17 @@ function writeSheet_(ss, sheet, role, cols) {
   return sheet
 }
 
+/** How many columns stay put when you scroll: date, status, and their name
+    plus first contact field. Row 1's merges are split to match. */
+function frozenCount_(n) { return Math.min(4, n) }
+
 /** Freeze, band, validate, colour. Everything that is not per-column. */
 function decorate_(sheet, cols) {
   var n = cols.length
   var rows = sheet.getMaxRows() - 2
 
   sheet.setFrozenRows(2)
-  sheet.setFrozenColumns(Math.min(4, n))   // date, status, and their name + first contact field
+  sheet.setFrozenColumns(frozenCount_(n))
   sheet.setRowHeightsForced(3, rows, 24)
   sheet.getRange(1, 1, sheet.getMaxRows(), n).setFontFamily('Inter')
 
@@ -446,11 +469,13 @@ function decorate_(sheet, cols) {
       .setRanges([r]).build())
   })
 
-  // An empty required answer is a data problem worth seeing.
+  // An email that failed to arrive is a data problem worth seeing. Guarded on
+  // the Received column, or the rule paints every empty row below the data red.
   ;['contact_email'].forEach(function (k) {
-    if (!idx[k]) return
+    if (!idx[k] || !idx._received) return
     rules.push(SpreadsheetApp.newConditionalFormatRule()
-      .whenCellEmpty()
+      .whenFormulaSatisfied('=AND($' + colLetter_(idx._received) + '3<>"",' +
+                            colLetter_(idx[k]) + '3="")')
       .setBackground(C.redBg)
       .setRanges([sheet.getRange(3, idx[k], rows, 1)]).build())
   })
@@ -638,9 +663,9 @@ function buildDashboard_(ss) {
   d.getRange(19, 7).setValue('Brands').setFontSize(8).setFontColor(C.muted).setFontWeight('bold')
   d.getRange(20, 2).setFormula(topCats_(CR))
   d.getRange(20, 7).setFormula(topCats_(BR))
-  d.getRange(20, 4).setFormula('=ARRAYFORMULA(IF(C20:C25="","",REPT("▇",MIN(20,C20:C25))))')
+  d.getRange(20, 4).setFormula('=ARRAYFORMULA(IF(C20:C25="","",REPT("▇",IF(C20:C25>20,20,C20:C25))))')
     .setFontColor(C.blue).setFontSize(9)
-  d.getRange(20, 9).setFormula('=ARRAYFORMULA(IF(H20:H25="","",REPT("▇",MIN(20,H20:H25))))')
+  d.getRange(20, 9).setFormula('=ARRAYFORMULA(IF(H20:H25="","",REPT("▇",IF(H20:H25>20,20,H20:H25))))')
     .setFontColor(C.blue).setFontSize(9)
 
   // ── money and reach, the two numbers worth knowing at a glance

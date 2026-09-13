@@ -31,7 +31,8 @@ const WEB3FORMS_KEY = 'c25cce79-b66b-4fd0-9639-9ee6ba2147a4'
 // spreadsheet. Deploy sheets/Code.gs and paste the /exec URL here; see
 // sheets/README.md. Left empty, submissions simply go to email only, which is
 // how the form behaved before the spreadsheet existed.
-const SHEETS_ENDPOINT = ''
+const SHEETS_ENDPOINT =
+  'https://script.google.com/macros/s/AKfycbwfTPAtjTmFNv6j9VUd7Hm8cVR0Ce8SPvhZAGnIwJrLktmC2cFGGCMxpfDtjXSm9x_NJg/exec'
 
 /* ══════════════════════════════════════════════════════════════════════ */
 

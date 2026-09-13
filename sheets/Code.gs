@@ -438,8 +438,14 @@ function decorate_(sheet, cols) {
     })
   }
 
+  // A checkbox comes from validation alone. insertCheckboxes() looks the same
+  // but writes FALSE into every row it touches, which makes getLastRow() report
+  // the bottom of the sheet and sends each new submission below hundreds of
+  // blank rows.
   if (idx._flag) {
-    sheet.getRange(3, idx._flag, rows, 1).insertCheckboxes()
+    sheet.getRange(3, idx._flag, rows, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireCheckbox().build()
+    )
   }
 
   // Fit score: a 0–100 gradient, so the good ones surface when you sort.
@@ -505,10 +511,28 @@ function colLetter_(n) {
   return s
 }
 
+/**
+ * The first free row, judged only by the Received column.
+ *
+ * getLastRow() looks at the whole sheet, so anything that leaves a stray value
+ * far down — a checkbox, a formula, a stray paste — pushes every future
+ * submission below it. Received is written on every row we create and nothing
+ * else writes to it, which makes it the honest answer.
+ */
+function nextRow_(sheet) {
+  var span = sheet.getMaxRows() - 2
+  if (span < 1) return 3
+  var col = sheet.getRange(3, 1, span, 1).getValues()
+  for (var i = col.length - 1; i >= 0; i--) {
+    if (col[i][0] !== '' && col[i][0] !== null) return i + 4
+  }
+  return 3
+}
+
 function appendRow_(sheet, role, display) {
   var ss = sheet.getParent()
   var cols = metaGet_(ss, sheet.getName()) || []
-  var r = Math.max(sheet.getLastRow() + 1, 3)
+  var r = nextRow_(sheet)
 
   var idx = {}
   cols.forEach(function (c, i) { idx[c.k] = i + 1 })
@@ -740,6 +764,7 @@ function onOpen() {
     .addItem('Set up / rebuild everything', 'setup')
     .addItem('Rebuild dashboard', 'menuDashboard')
     .addItem('Reapply formatting', 'menuReformat')
+    .addItem('Tidy rows (pull data to the top)', 'tidy')
     .addToUi()
 }
 
@@ -758,6 +783,46 @@ function setup() {
   buildDashboard_(ss)
   ss.setActiveSheet(ss.getSheetByName(SHEETS.dash))
   SpreadsheetApp.getActive().toast('Sheets built.', 'Pairyx', 5)
+}
+
+/**
+ * Pulls existing rows back up to row 3 and clears whatever was left below
+ * them. For sheets written before the checkbox fix, where submissions landed
+ * at row 401 and below.
+ */
+function tidy() {
+  var ss = SpreadsheetApp.getActive()
+  ;[SHEETS.creators, SHEETS.brands].forEach(function (name) {
+    var sheet = ss.getSheetByName(name)
+    if (!sheet) return
+    var cols = metaGet_(ss, name)
+    if (!cols || !cols.length) return
+
+    var n = cols.length
+    var span = sheet.getMaxRows() - 2
+    if (span < 1) return
+
+    var all = sheet.getRange(3, 1, span, n).getValues()
+    var keep = all.filter(function (r) { return r[0] !== '' && r[0] !== null })
+
+    sheet.getRange(3, 1, span, n).clearContent()
+    if (keep.length) sheet.getRange(3, 1, keep.length, n).setValues(keep)
+
+    // setValues pasted the old CPM as a number; put the formula back.
+    var idx = {}
+    cols.forEach(function (c, i) { idx[c.k] = i + 1 })
+    if (idx._cpm && idx.rate_min && idx.avg_views) {
+      for (var i = 0; i < keep.length; i++) {
+        var r = 3 + i
+        sheet.getRange(r, idx._cpm).setFormula(
+          '=IFERROR(ROUND(' + colLetter_(idx.rate_min) + r + '/(' +
+          colLetter_(idx.avg_views) + r + '/1000),2),"")'
+        )
+      }
+    }
+    ss.toast(name + ': ' + keep.length + ' row(s) moved to the top.', 'Pairyx', 5)
+  })
+  buildDashboard_(ss)
 }
 
 function menuDashboard() { buildDashboard_(SpreadsheetApp.getActive()); SpreadsheetApp.getActive().toast('Dashboard rebuilt.', 'Pairyx', 5) }

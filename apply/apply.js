@@ -309,6 +309,12 @@ async function saveToSheet() {
     }),
   })
   if (!res.ok) throw new Error(`Sheets endpoint returned ${res.status}`)
+
+  // Apps Script answers 200 even when it could not save — the failure is in
+  // the body. Without this the console warning never fires and a sheet that
+  // has quietly stopped recording looks exactly like one that is working.
+  const data = await res.json().catch(() => null)
+  if (!data || !data.ok) throw new Error(data ? data.message : 'unreadable response')
 }
 
 async function submit(e) {

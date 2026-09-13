@@ -49,7 +49,8 @@ const AGES = [
 
 const DEALS = [
   ['cash', 'Flat cash'], ['cash_equity', 'Cash + equity'],
-  ['cash_revshare', 'Cash + revenue share'], ['product', 'Product only'],
+  ['cash_revshare', 'Cash + revenue share'], ['revshare', 'Revenue share only'],
+  ['product', 'Product only'],
   ['affiliate', 'Affiliate / commission'], ['open', 'Open to discussion'],
 ]
 

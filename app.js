@@ -309,7 +309,8 @@ class PairyxSite {
     const data={
       cash:{a:100,b:0,bl:'',bc:null,d:'A flat fee paid on delivery — clean and predictable for both sides.'},
       equity:{a:45,b:55,bl:'EQUITY',bc:'rgba(249,211,138,',d:'Part fee, part ownership — aligning the creator with the brand\u2019s long-term growth.'},
-      revshare:{a:35,b:65,bl:'REV-SHARE',bc:'rgba(143,156,255,',d:'A smaller base plus a cut of attributable sales — pay that scales with performance.'}
+      revshare:{a:35,b:65,bl:'REV-SHARE',bc:'rgba(143,156,255,',d:'A smaller base plus a cut of attributable sales — pay that scales with performance.'},
+      revonly:{a:0,b:100,bl:'REV-SHARE',bc:'rgba(143,156,255,',d:'No fee up front — the creator is paid purely on what the campaign sells.'}
     };
     const apply=(key)=>{ const d=data[key]; if(!d) return;
       if(segA){ segA.style.width=d.a+'%'; } if(segApct){ segApct.textContent=d.a+'%'; }

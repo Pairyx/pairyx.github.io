@@ -1,15 +1,22 @@
 /**
  * Pairyx — /apply
  *
- * A multi-step client intake form. No login, no database — Web3Forms is the
- * only backend, since a static GitHub Pages site cannot send mail itself.
- * A submission that fails to send is just retried by the applicant; there is
- * no separate store to fall back on.
+ * A multi-step client intake form. No login, no server of our own: a static
+ * GitHub Pages site cannot send mail or hold a database, so a submission goes
+ * two places at once.
+ *
+ *   Web3Forms   emails it to the team. The guaranteed copy — if this fails,
+ *               the applicant is asked to try again.
+ *   Apps Script appends it to the intake spreadsheet. Best effort, and on
+ *               purpose: a script quota or a redeploy must never cost someone
+ *               the five minutes they just spent, and the email means nothing
+ *               is actually lost when it does fail. Missing rows can be
+ *               replayed from the emails.
  *
  * The questions live in forms.js. Edit them there.
  */
 
-import { formFor, COPY } from './forms.js'
+import { formFor, COPY, schemaFor, displayFor } from './forms.js'
 
 /* ══════════════════════════════════════════════════════════════════════
    CONFIG
@@ -19,6 +26,12 @@ import { formFor, COPY } from './forms.js'
 // Free, ~30 seconds, no account: https://web3forms.com (enter team@pairyx.co,
 // they email you the key).
 const WEB3FORMS_KEY = 'c25cce79-b66b-4fd0-9639-9ee6ba2147a4'
+
+// Google Apps Script Web App URL — this is what writes rows into the intake
+// spreadsheet. Deploy sheets/Code.gs and paste the /exec URL here; see
+// sheets/README.md. Left empty, submissions simply go to email only, which is
+// how the form behaved before the spreadsheet existed.
+const SHEETS_ENDPOINT = ''
 
 /* ══════════════════════════════════════════════════════════════════════ */
 
@@ -252,6 +265,51 @@ function prettyBody() {
   return lines.join('\n')
 }
 
+/** Emails the application. The copy we cannot afford to lose. */
+async function sendEmail() {
+  const res = await fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      access_key: WEB3FORMS_KEY,
+      subject: `New ${role} application — ${answers.company_name || answers.display_name || answers.contact_email}`,
+      from_name: 'Pairyx intake',
+      email: answers.contact_email,
+      message: prettyBody(),
+    }),
+  })
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || 'Web3Forms rejected the submission')
+}
+
+/**
+ * Appends the application to the intake spreadsheet.
+ *
+ * The schema travels with the answers so the sheet can build and repair its
+ * own columns — that is what lets forms.js be edited without anyone touching
+ * the Apps Script. `display` is the human-readable version that lands in the
+ * cells; `answers` is the raw copy kept in the log tab.
+ */
+async function saveToSheet() {
+  if (!SHEETS_ENDPOINT) return
+
+  const res = await fetch(SHEETS_ENDPOINT, {
+    method: 'POST',
+    // text/plain keeps this a "simple" cross-origin request. Any other content
+    // type triggers a CORS preflight, and an Apps Script web app cannot answer
+    // an OPTIONS — the submission would never arrive.
+    headers: { 'content-type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      role,
+      schema: schemaFor(role),
+      display: displayFor(role, answers),
+      answers,
+      page: location.href,
+    }),
+  })
+  if (!res.ok) throw new Error(`Sheets endpoint returned ${res.status}`)
+}
+
 async function submit(e) {
   e.preventDefault()
   const btn = $('submit-btn')
@@ -264,7 +322,7 @@ async function submit(e) {
   btn.textContent = 'Sending…'
 
   if (isPreview) {
-    console.info('[apply] preview mode — validated, nothing saved.', answers)
+    console.info('[apply] preview mode — validated, nothing sent.', displayFor(role, answers))
     $('done-lede').textContent = COPY[role].done
     show('done')
     btn.disabled = false
@@ -272,22 +330,16 @@ async function submit(e) {
     return
   }
 
-  try {
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({
-        access_key: WEB3FORMS_KEY,
-        subject: `New ${role} application — ${answers.company_name || answers.display_name || answers.contact_email}`,
-        from_name: 'Pairyx intake',
-        email: answers.contact_email,
-        message: prettyBody(),
-      }),
-    })
-    const data = await res.json()
-    if (!data.success) throw new Error(data.message || 'Web3Forms rejected the submission')
-  } catch (err) {
-    console.error('[apply] submission failed', err)
+  const [mail, sheet] = await Promise.allSettled([sendEmail(), saveToSheet()])
+
+  if (sheet.status === 'rejected') {
+    // Not shown to the applicant. The email is the copy that matters, and a
+    // row can be replayed from it.
+    console.warn('[apply] spreadsheet write failed', sheet.reason)
+  }
+
+  if (mail.status === 'rejected') {
+    console.error('[apply] submission failed', mail.reason)
     errBox.textContent =
       "We could not send that — please try again. If it keeps happening, email team@pairyx.co directly and we will take it from there."
     errBox.hidden = false

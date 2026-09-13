@@ -391,3 +391,49 @@ export const COPY = {
 export function formFor(role) {
   return role === 'brand' ? BRAND_FORM : CREATOR_FORM
 }
+
+/* ═══════════════════════════ for the spreadsheet ═══════════════════════
+   Submissions go to a Google Sheet as well as to email. The sheet builds its
+   own columns from what we send here, which is why the questions can be
+   edited freely above without touching anything in sheets/. */
+
+/** The question list, minus the option vocabularies the sheet has no use for. */
+export function schemaFor(role) {
+  return formFor(role).map(({ legend, fields }) => ({
+    legend,
+    fields: fields.map(({ k, label, type, hint }) =>
+      hint ? { k, label, type, hint } : { k, label, type }),
+  }))
+}
+
+/**
+ * Answers rewritten for a human reading a spreadsheet: option keys become
+ * their labels, multi-selects become a comma list, and a range becomes two
+ * numbers so the column can be sorted and averaged.
+ */
+export function displayFor(role, answers) {
+  const out = {}
+
+  for (const group of formFor(role)) {
+    for (const f of group.fields) {
+      const v = answers[f.k]
+      if (v === undefined || v === null || v === '') continue
+
+      if (f.type === 'range') {
+        if (v.min !== '' && v.min !== undefined) out[`${f.k}_min`] = v.min
+        if (v.max !== '' && v.max !== undefined) out[`${f.k}_max`] = v.max
+        continue
+      }
+
+      if (f.options) {
+        const label = (val) => (f.options.find(([o]) => o === val) || [null, val])[1]
+        out[f.k] = Array.isArray(v) ? v.map(label).join(', ') : label(v)
+        continue
+      }
+
+      out[f.k] = Array.isArray(v) ? v.join(', ') : v
+    }
+  }
+
+  return out
+}

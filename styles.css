@@ -223,33 +223,96 @@ p { margin: 0; }
 
 /* ---------------------------------------------------------------- responsive */
 
-@media (max-width: 900px) {
+@media (max-width: 1099px) {
   .intro, .split { grid-template-columns: minmax(0, 1fr); }
-  .founders { grid-template-columns: minmax(0, 1fr); max-width: 520px; }
-  .terms { grid-template-columns: minmax(0, 1fr); }
+  .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* founders become wide cards, photo beside the words */
+  .founders { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+  .founder { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .founder-photo { aspect-ratio: auto; min-height: 260px; }
+  .founder-text { align-self: center; padding: 28px 30px; }
+  /* the P stops sharing space with the headline and sits above it, whole */
+  .hero { flex-direction: column; align-items: stretch; min-height: 0; padding-top: var(--nav-space); }
+  .hero-ascii { position: relative; right: auto; justify-content: center; margin: 0 -50%; }
+  /* the engine draws the P 8 columns right of centre; pull it back to centre */
+  #px-ascii { font-size: clamp(4px, 1.42vw, 9px); transform: translateX(calc(-8 * (0.6em + 1px))); }
+  .hero::after { display: none; }
+  .hero-copy { max-width: 640px; padding: 8px 0 56px; }
+}
+/* a phone held sideways: no height to stack, so the P takes its own column */
+@media (max-width: 1099px) and (max-height: 520px) and (orientation: landscape) {
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  .hero .wrap { grid-area: 1 / 1; }
+  .hero-ascii { grid-area: 1 / 2; margin: 0; }
+  #px-ascii { font-size: 4.5px; }
+  .hero-copy { padding: 16px 0 40px; }
+  .hero-copy h1 { font-size: 34px; }
 }
 @media (max-width: 760px) {
   :root { --nav-space: 84px; }
   .nav { top: 10px; }
   /* the pill keeps the logo, Apply and a menu button; the links fold out below */
-  .nav-pill { flex-wrap: wrap; border-radius: 29px; padding-left: 16px; }
+  .nav-pill { flex-wrap: wrap; border-radius: 30px; padding-left: 12px; }
   .nav-toggle { display: inline-flex; }
   .links { display: none; order: 10; width: 100%; flex-direction: column; gap: 0; margin: 4px 0 2px; }
   .nav.is-open .links { display: flex; }
   .nav.is-open .nav-pill { background: var(--black-2); }
-  .links a { padding: 12px 10px; font-size: 17px; }
+  .links a { padding: 13px 10px; font-size: 17px; }
   .links a[aria-current="page"]::after { left: auto; right: 12px; bottom: 50%; transform: translateY(50%); }
   .links-hl { display: none; }
+
+  .section { padding: 48px 0; }
+  .closing { padding: 48px 0 72px; }
+  .page-head { padding: calc(var(--nav-space) + 32px) 0 32px; }
+  .hero-copy { padding-bottom: 40px; }
+  .terms { grid-template-columns: minmax(0, 1fr); }
   .pair { grid-template-columns: minmax(0, 1fr); }
-  .sides-brief { grid-template-columns: minmax(0, 1fr); }
+  .pair > section { padding: 26px 22px; border-radius: 24px; }
+  .sides-brief { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .steps li { grid-template-columns: 48px minmax(0, 1fr); gap: 0 16px; }
   .steps li::before { font-size: 36px; }
-  /* on a phone the P sits above the headline instead of behind it */
-  .hero { flex-direction: column; align-items: stretch; min-height: 0; padding-top: var(--nav-space); }
-  .hero-ascii { position: relative; right: auto; justify-content: center; margin: 0 -40%; }
-  .hero::after { display: none; }
-  .hero-copy { padding: 8px 0 64px; }
+  .actions .btn { flex: 1 1 auto; }
 }
+@media (max-width: 599px) {
+  /* founders stack again: the photo leads, a little shorter than square */
+  .founders { max-width: none; }
+  .founder { display: block; border-radius: 24px; }
+  .founder-photo { aspect-ratio: 1 / 0.92; min-height: 0; }
+  .founder-text { padding: 22px 22px 26px; }
+  /* the footer becomes a tidy two-column list of links */
+  .foot nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; width: 100%; margin-right: 0; }
+  .foot nav a { display: flex; align-items: center; min-height: 44px; font-size: 15px; }
+  .foot-in { gap: 8px 24px; }
+}
+
+/* ---------------------------------------------------------------- touch */
+
+html { -webkit-tap-highlight-color: transparent; }
+.foot { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+/* Fingers need 44px. Anything tappable on a touch screen gets at least that. */
+@media (pointer: coarse) {
+  .nav .btn, .btn { min-height: 46px; }
+  .nav .btn { min-height: 44px; }
+  .nav-toggle { width: 44px; height: 44px; }
+  .brand { min-height: 44px; padding-right: 6px; }
+  .links a { min-height: 44px; display: flex; align-items: center; }
+  .textlink { display: inline-flex; align-items: center; min-height: 44px; }
+  p .textlink { display: inline; min-height: 0; }
+  .foot-in > a:first-child { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: -10px; }
+  .foot nav a { display: inline-flex; align-items: center; min-height: 44px; }
+  .textlink:active, .foot a:active { opacity: .6; }
+}
+/* Hover-only flourishes stay on devices that can hover, so a tap never leaves
+   a button stuck mid-roll or the logo stuck tilted. */
+@media (hover: none) {
+  .btn:hover { border-color: var(--line); background: transparent; }
+  .btn-gold:hover { background: var(--gold); border-color: var(--gold); }
+  .btn:hover .roll > span { transform: none; }
+  .btn:hover .roll::after { transform: translateY(110%); }
+  .brand:hover .mark { transform: none; }
+  .brand:active .mark { transform: rotate(-10deg) scale(1.08); }
+}
+
 @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
   .nav.is-open .links { animation: unfold .35s var(--ease-quart); }
   @keyframes unfold { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

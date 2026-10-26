@@ -104,6 +104,13 @@ h1 { font-size: clamp(40px, 6vw, 60px); line-height: 1.02; margin: 0 0 18px; }
   .roles { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
-  .fieldset { padding: 20px; }
+  .fieldset { padding: 20px; border-radius: 24px; }
   .two { grid-template-columns: minmax(0, 1fr); }
+  /* Continue and Back share the row and are easy to hit with a thumb */
+  .actions .btn { flex: 1 1 0; }
+  .rolecard { padding: 24px; border-radius: 24px; }
+}
+@media (pointer: coarse) {
+  .check { min-height: 44px; padding: 10px 16px; }
+  .check input { width: 18px; height: 18px; }
 }

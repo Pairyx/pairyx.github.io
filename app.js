@@ -39,7 +39,7 @@ class PairyxSite {
     on(window,'scroll',onScroll,{passive:true}); onScroll();
     // On a phone the links fold out of the pill.
     if(toggle){
-      const set=(open)=>{ nav.classList.toggle('is-open',open); toggle.setAttribute('aria-expanded',String(open)); toggle.setAttribute('aria-label',open?'Close menu':'Menu'); };
+      const set=(open)=>{ nav.classList.toggle('is-open',open); document.documentElement.classList.toggle('menu-open',open); toggle.setAttribute('aria-expanded',String(open)); toggle.setAttribute('aria-label',open?'Close menu':'Menu'); };
       on(toggle,'click',()=>set(toggle.getAttribute('aria-expanded')!=='true'));
       if(links) on(links,'click',(e)=>{ if(e.target.closest('a')) set(false); });
       on(document,'keydown',(e)=>{ if(e.key==='Escape'&&nav.classList.contains('is-open')){ set(false); toggle.focus(); } });
@@ -47,21 +47,21 @@ class PairyxSite {
     this._cleanup.push(()=>handlers.forEach(f=>f()));
   }
 
-  // The nav's P is cut out of a gold light. The light drifts on its own and
-  // leans toward the pointer when it comes near the logo.
+  // The logo (P and wordmark) is filled by one gold light. It drifts on its own
+  // and leans toward the pointer when it comes near the logo.
   initMark(){
-    const mark=document.querySelector('.nav .mark'); if(!mark||this.cfg.reduceMotion) return;
-    let px=-1e4, py=-1e4, lx=38, ly=30, id;
+    const svg=document.querySelector('.nav .lockup'), light=svg&&svg.querySelector('#px-light'); if(!light||this.cfg.reduceMotion) return;
+    const VW=92, VH=28; let px=-1e4, py=-1e4, lx=30, ly=8, id;
     const onMove=(e)=>{ px=e.clientX; py=e.clientY; };
     window.addEventListener('pointermove',onMove,{passive:true}); this._cleanup.push(()=>window.removeEventListener('pointermove',onMove));
     const loop=(t)=>{ id=requestAnimationFrame(loop);
-      const r=mark.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
-      let tx=50+34*Math.sin(t*0.00055), ty=45+30*Math.sin(t*0.0008+1.3);
-      const d=Math.hypot(px-cx,py-cy), R=280;
-      if(d<R){ const w=1-d/R; const fx=50+((px-cx)/r.width)*60, fy=50+((py-cy)/r.height)*60;
-        tx+= (Math.max(-30,Math.min(130,fx))-tx)*w; ty+= (Math.max(-30,Math.min(130,fy))-ty)*w; }
+      const r=svg.getBoundingClientRect(); if(!r.width) return;
+      let tx=VW/2+(VW*0.48)*Math.sin(t*0.00045), ty=VH/2+(VH*0.6)*Math.sin(t*0.0007+1.3);
+      const d=Math.hypot(px-(r.left+r.width/2),py-(r.top+r.height/2)), R=300;
+      if(d<R){ const w=1-d/R; const fx=(px-r.left)/r.width*VW, fy=(py-r.top)/r.height*VH;
+        tx+=(Math.max(-20,Math.min(VW+20,fx))-tx)*w; ty+=(Math.max(-20,Math.min(VH+20,fy))-ty)*w; }
       lx+=(tx-lx)*0.08; ly+=(ty-ly)*0.08;
-      mark.style.setProperty('--lx',lx.toFixed(1)+'%'); mark.style.setProperty('--ly',ly.toFixed(1)+'%');
+      light.setAttribute('cx',lx.toFixed(1)); light.setAttribute('cy',ly.toFixed(1));
     };
     id=requestAnimationFrame(loop); this._cleanup.push(()=>cancelAnimationFrame(id));
   }

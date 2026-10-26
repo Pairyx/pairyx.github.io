@@ -25,20 +25,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="/fonts/UncutSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css?v=6">
+<link rel="stylesheet" href="/styles.css?v=7">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="top">
-  <div class="wrap top-in">
-    <a class="brand" href="/" aria-label="Pairyx home"><img src="/uploads/PL-tight.png" alt="" width="26" height="26"><span>Pairyx</span></a>
-    <nav class="links" aria-label="Main">
+<header class="nav" id="nav">
+  <div class="nav-pill">
+    <a class="brand" href="/" aria-label="Pairyx home"><span class="mark" aria-hidden="true"></span><span class="word">Pairyx</span></a>
+    <nav class="links" id="nav-links" aria-label="Main">
+      <span class="links-hl" aria-hidden="true"></span>
       <a href="/how-it-works/">How it works</a>
       <a href="/brands-and-creators/">Brands &amp; creators</a>
       <a href="/about/">About</a>
     </nav>
-    <a class="btn btn-gold" href="/apply/">Apply</a>
+    <a class="btn btn-gold" href="/apply/"><span class="roll" data-label="Apply"><span>Apply</span></span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span></button>
   </div>
 </header>
 
@@ -50,8 +52,8 @@
         <h1>Find the creator who belongs next to your brand.</h1>
         <p class="lead">Pairyx matches brands and creators on audience, voice and values, then pitches, negotiates and closes the deal.</p>
         <div class="actions">
-          <a class="btn btn-gold" href="/apply/">Apply</a>
-          <a class="btn" href="/how-it-works/">How it works</a>
+          <a class="btn btn-gold" href="/apply/"><span class="roll" data-label="Apply"><span>Apply</span></span></a>
+          <a class="btn" href="/how-it-works/"><span class="roll" data-label="How it works"><span>How it works</span></span></a>
         </div>
       </div>
     </div>
@@ -93,6 +95,6 @@
   </div>
 </footer>
 
-<script src="/app.js?v=5"></script>
+<script src="/app.js?v=6"></script>
 </body>
 </html>

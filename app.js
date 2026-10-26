@@ -1,5 +1,7 @@
-/* Pairyx: the spinning ASCII "P" on the homepage, the founder photo reveal on
-   touch screens, and redirects for links to the old one-page site's sections. */
+/* Pairyx: the floating nav (sliding link highlight, phone menu), the living
+   light inside the nav's P, the spinning ASCII "P" on the homepage, the founder
+   photo reveal on touch screens, and redirects for links to the old one-page
+   site's sections. */
 
 class PairyxSite {
   constructor(props){ this.props = props || {}; }
@@ -9,7 +11,8 @@ class PairyxSite {
     this._cleanup = [];
     const safe = (fn) => { try { fn.call(this); } catch(e){ console.warn('px init', e); } };
     safe(this.initOldAnchors);
-    requestAnimationFrame(() => { safe(this.initAscii); safe(this.initFounders); });
+    safe(this.initNav);
+    requestAnimationFrame(() => { safe(this.initMark); safe(this.initAscii); safe(this.initFounders); });
   }
   componentWillUnmount(){ (this._cleanup||[]).forEach(f => { try { f(); } catch(e){} }); }
 
@@ -19,6 +22,48 @@ class PairyxSite {
     if(location.pathname!=='/' && location.pathname!=='/index.html') return;
     const to={ '#why':'/how-it-works/', '#how':'/how-it-works/', '#sides':'/brands-and-creators/', '#founders':'/about/' }[location.hash];
     if(to) location.replace(to);
+  }
+
+  initNav(){
+    const nav=document.getElementById('nav'); if(!nav) return;
+    const links=nav.querySelector('.links'), hl=nav.querySelector('.links-hl'), toggle=nav.querySelector('.nav-toggle');
+    const handlers=[]; const on=(el,ev,fn,o)=>{ el.addEventListener(ev,fn,o); handlers.push(()=>el.removeEventListener(ev,fn,o)); };
+    // A soft pill slides to whichever link the pointer is on.
+    if(links&&hl){
+      const to=(a)=>{ hl.style.setProperty('--hl-x',a.offsetLeft+'px'); hl.style.setProperty('--hl-w',a.offsetWidth+'px'); hl.classList.add('is-on'); };
+      links.querySelectorAll('a').forEach(a=>on(a,'pointerenter',()=>to(a)));
+      on(links,'pointerleave',()=>hl.classList.remove('is-on'));
+    }
+    // The pill firms up once the page scrolls under it.
+    const onScroll=()=>nav.classList.toggle('is-scrolled',(window.scrollY||0)>8);
+    on(window,'scroll',onScroll,{passive:true}); onScroll();
+    // On a phone the links fold out of the pill.
+    if(toggle){
+      const set=(open)=>{ nav.classList.toggle('is-open',open); toggle.setAttribute('aria-expanded',String(open)); toggle.setAttribute('aria-label',open?'Close menu':'Menu'); };
+      on(toggle,'click',()=>set(toggle.getAttribute('aria-expanded')!=='true'));
+      if(links) on(links,'click',(e)=>{ if(e.target.closest('a')) set(false); });
+      on(document,'keydown',(e)=>{ if(e.key==='Escape'&&nav.classList.contains('is-open')){ set(false); toggle.focus(); } });
+    }
+    this._cleanup.push(()=>handlers.forEach(f=>f()));
+  }
+
+  // The nav's P is cut out of a gold light. The light drifts on its own and
+  // leans toward the pointer when it comes near the logo.
+  initMark(){
+    const mark=document.querySelector('.nav .mark'); if(!mark||this.cfg.reduceMotion) return;
+    let px=-1e4, py=-1e4, lx=38, ly=30, id;
+    const onMove=(e)=>{ px=e.clientX; py=e.clientY; };
+    window.addEventListener('pointermove',onMove,{passive:true}); this._cleanup.push(()=>window.removeEventListener('pointermove',onMove));
+    const loop=(t)=>{ id=requestAnimationFrame(loop);
+      const r=mark.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      let tx=50+34*Math.sin(t*0.00055), ty=45+30*Math.sin(t*0.0008+1.3);
+      const d=Math.hypot(px-cx,py-cy), R=280;
+      if(d<R){ const w=1-d/R; const fx=50+((px-cx)/r.width)*60, fy=50+((py-cy)/r.height)*60;
+        tx+= (Math.max(-30,Math.min(130,fx))-tx)*w; ty+= (Math.max(-30,Math.min(130,fy))-ty)*w; }
+      lx+=(tx-lx)*0.08; ly+=(ty-ly)*0.08;
+      mark.style.setProperty('--lx',lx.toFixed(1)+'%'); mark.style.setProperty('--ly',ly.toFixed(1)+'%');
+    };
+    id=requestAnimationFrame(loop); this._cleanup.push(()=>cancelAnimationFrame(id));
   }
 
   initAscii(){

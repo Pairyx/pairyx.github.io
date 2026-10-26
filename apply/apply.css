@@ -29,7 +29,7 @@ h1 { font-size: clamp(40px, 6vw, 60px); line-height: 1.02; margin: 0 0 18px; }
   transition: border-color .2s;
 }
 .rolecard:hover { border-color: var(--gold); }
-.rolecard .title { font-family: var(--serif); font-size: 28px; line-height: 1.1; margin-bottom: 12px; }
+.rolecard .title { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 12px; }
 .rolecard p { color: var(--ink-2); font-size: 15.5px; margin: 0; }
 
 /* ---------------------------------------------------------------- progress */
@@ -42,7 +42,7 @@ h1 { font-size: clamp(40px, 6vw, 60px); line-height: 1.02; margin: 0 0 18px; }
 /* ---------------------------------------------------------------- a step */
 
 .fieldset { border: 1px solid var(--line); border-radius: 18px; background: var(--black-2); padding: 28px; margin: 0; min-width: 0; }
-.fieldset > .legend { font-family: var(--serif); font-size: 30px; line-height: 1.1; margin: 0 0 6px; }
+.fieldset > .legend { font-size: 26px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 6px; }
 .stepnote { color: var(--ink-2); margin: 0 0 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 
 .field { margin-bottom: 22px; }

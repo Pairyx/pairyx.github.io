@@ -71,23 +71,17 @@ p { margin: 0; }
 .btn-gold:hover { background: var(--gold-hi); border-color: var(--gold-hi); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
-/* The label rolls up on hover and a copy rolls in under it. The copy is a
-   pseudo-element with empty alt text, so screen readers hear the label once. */
-.roll { display: inline-grid; overflow: hidden; line-height: 1.25; }
-.roll > span, .roll::after { grid-area: 1 / 1; transition: transform .45s var(--ease-quart); }
-.roll::after { content: attr(data-label); content: attr(data-label) / ""; transform: translateY(110%); }
-.btn:hover .roll > span { transform: translateY(-110%); }
-.btn:hover .roll::after { transform: none; }
-
 .textlink { color: var(--gold); font-weight: 500; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; transition: color .2s; }
 .textlink:hover { color: var(--ink); }
 
 /* ---------------------------------------------------------------- nav: a floating pill */
 
+/* The pill holds only the logo, Apply and the menu button; the pages live in
+   the menu, which opens out of the pill itself. */
 .nav { position: fixed; top: 14px; left: 0; right: 0; z-index: 50; padding: 0 var(--gutter); pointer-events: none; }
 .nav-pill {
   pointer-events: auto; max-width: 1080px; margin: 0 auto;
-  display: flex; align-items: center; gap: 6px; min-height: 58px; padding: 8px 8px 8px 18px;
+  display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 8px 8px 8px 26px;
   border-radius: 99px; border: 1px solid rgba(242, 238, 230, 0.1);
   background: rgba(12, 11, 9, 0.5);
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
@@ -95,30 +89,44 @@ p { margin: 0; }
 }
 .nav.is-scrolled .nav-pill { background: rgba(12, 11, 9, 0.82); }
 
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
-/* The logo is one object: the P and a bold "Pairyx" share a single gold light,
-   as in the brand's own lockup. app.js moves the light (#px-light) so it drifts
-   and leans toward the pointer. */
-.lockup { display: block; width: 92px; height: 28px; overflow: visible; transition: transform .5s var(--ease-quart); }
-.lockup text { font-family: var(--font); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.brand { display: flex; align-items: center; text-decoration: none; margin-right: auto; }
+/* The logo is one object: a heavier P and a bold "Pairyx" share a single light.
+   It starts gold and turns white as the page scrolls (app.js sets --w from 0
+   to 1), and the light drifts and leans toward the pointer. */
+.lockup { --w: 0; display: block; width: 98px; height: 30px; overflow: visible; transition: transform .5s var(--ease-quart); }
+.lockup text { font-family: var(--font); font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
 .lockup mask { mask-type: alpha; }
+.lockup .s0 { stop-color: color-mix(in oklab, #fff5d8, #ffffff calc(var(--w) * 100%)); }
+.lockup .s1 { stop-color: color-mix(in oklab, #f9d38a, #f7f4ee calc(var(--w) * 100%)); }
+.lockup .s2 { stop-color: color-mix(in oklab, #d9a256, #e9e4db calc(var(--w) * 100%)); }
+.lockup .s3 { stop-color: color-mix(in oklab, #b8823f, #d8d2c6 calc(var(--w) * 100%)); }
 .brand:hover .lockup { transform: scale(1.04); }
-
-.links { position: relative; display: flex; gap: 2px; margin-right: 10px; }
-.links a { position: relative; z-index: 1; padding: 9px 14px; border-radius: 99px; color: var(--ink-2); font-size: 15px; text-decoration: none; transition: color .2s; }
-.links a:hover, .links a[aria-current="page"] { color: var(--ink); }
-/* the current page wears a small gold dot */
-.links .sub, .menu-foot { display: none; }
-.links a[aria-current="page"]::after { content: ''; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--gold); transform: translateX(-50%); }
-/* a soft pill that slides to whichever link you point at */
-.links-hl { position: absolute; z-index: 0; top: 0; left: 0; height: 100%; width: var(--hl-w, 0); border-radius: 99px; background: var(--veil); opacity: 0; transform: translateX(var(--hl-x, 0)); transition: transform .4s var(--ease-quart), width .4s var(--ease-quart), opacity .2s; pointer-events: none; }
-.links-hl.is-on { opacity: 1; }
 .nav .btn { min-height: 40px; padding: 0 18px; }
 
-.nav-toggle { display: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; }
+.nav-toggle { display: inline-flex; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; transition: border-color .2s, background-color .2s; }
+.nav-toggle:hover { border-color: rgba(242, 238, 230, 0.32); background: var(--veil); }
 .nav-toggle span { display: block; width: 15px; height: 1.5px; border-radius: 1px; background: currentColor; transition: transform .35s var(--ease-quart); }
 .nav.is-open .nav-toggle span:first-child { transform: translateY(3.25px) rotate(45deg); }
 .nav.is-open .nav-toggle span:last-child { transform: translateY(-3.25px) rotate(-45deg); }
+
+/* the menu */
+.links, .menu-foot { display: none; }
+.nav.is-open .nav-pill { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; border-radius: 30px; background: var(--black-2); padding-bottom: 26px; }
+.nav.is-open .links { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 32px; margin: 32px 0 0; padding-right: 18px; }
+.links a { display: block; padding: 6px 0; color: var(--ink); text-decoration: none; transition: opacity .35s var(--ease-quart); }
+.links .t { display: inline-block; font-size: clamp(30px, 3vw, 40px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; transition: transform .5s var(--ease-quart), color .3s; }
+.links .sub { display: block; margin-top: 8px; font-size: 15px; line-height: 1.4; color: var(--ink-2); transition: color .3s; }
+.links a[aria-current="page"] .t { color: var(--gold); }
+.nav.is-open .menu-foot { display: block; grid-column: 1 / -1; margin: 22px 0 0; font-size: 15px; color: var(--ink-2); }
+.menu-foot a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; transition: color .2s; }
+.menu-foot a:hover { color: var(--ink); }
+/* pointing at a page slides its name along in gold and quiets the others */
+@media (hover: hover) {
+  .links:hover a:not(:hover) { opacity: .38; }
+  .links a:hover .t { transform: translateX(12px); color: var(--gold); }
+  .links a:hover .sub { color: var(--ink); }
+}
+.links a:focus-visible .t { transform: translateX(12px); color: var(--gold); }
 
 /* ---------------------------------------------------------------- page scaffolding */
 
@@ -150,12 +158,21 @@ p { margin: 0; }
 /* keeps the headline readable where it crosses the P */
 .hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(12, 11, 9, 0.94) 0%, rgba(12, 11, 9, 0.6) 42%, rgba(12, 11, 9, 0) 70%); }
 .hero .wrap { position: relative; z-index: 1; width: 100%; }
-.hero-copy { max-width: 600px; padding: 72px 0; }
-.hero-copy h1 { font-size: clamp(42px, 4.6vw, 68px); }
+.hero-copy { max-width: 540px; padding: 72px 0; }
+.hero-copy h1 { font-size: clamp(42px, 4.4vw, 64px); }
 .hero-copy .lead { margin-top: 28px; max-width: 30em; }
 .hero-copy .actions { margin-top: 40px; }
 
 .intro { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px 64px; align-items: start; }
+.platform { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.platform > div { padding: clamp(24px, 2.6vw, 32px); border-radius: 28px; background: var(--black-2); }
+.platform p:last-child { margin-top: 14px; color: var(--ink-2); }
+.platform-actions { margin-top: 32px; }
+/* where each piece stands, said plainly */
+.status { display: inline-block; margin-top: 10px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); vertical-align: middle; }
+.status.is-live { border-color: rgba(249, 211, 138, 0.45); color: var(--gold); }
+dt .status { margin: 0 0 0 8px; }
+.terms-1 { margin-top: 28px; grid-template-columns: minmax(0, 1fr) !important; gap: 22px; }
 .sides-brief { margin-top: clamp(56px, 7vw, 88px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
 .sides-brief p { margin-top: 10px; color: var(--ink-2); max-width: 30em; }
 .sides-brief .textlink { display: inline-block; margin-top: 16px; }
@@ -248,23 +265,16 @@ p { margin: 0; }
   :root { --nav-space: 84px; }
   .nav { top: 10px; }
   /* the pill keeps the logo, Apply and a menu button; the links fold out below */
-  .nav-pill { border-radius: 30px; padding-left: 14px; }
-  .nav-toggle { display: inline-flex; }
-  .links, .links-hl { display: none; }
+  .nav-pill { border-radius: 30px; padding-left: 18px; }
+  .platform { grid-template-columns: minmax(0, 1fr); }
   /* open: the pill becomes a panel the height of the screen */
   .nav.is-open { bottom: 10px; }
   html.menu-open { overflow: hidden; }
-  .nav.is-open .nav-pill {
-    height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: auto minmax(0, 1fr) auto;
-    align-items: center; gap: 6px; padding: 8px 8px 22px 14px; border-radius: 30px; background: var(--black-2);
-  }
-  .nav.is-open .links { display: flex; grid-column: 1 / -1; grid-row: 2; flex-direction: column; justify-content: center; gap: 4px; margin: 0; padding: 0 6px; }
-  .nav.is-open .links a { display: block; padding: 12px 0; font-size: 36px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; color: var(--ink); }
-  .nav.is-open .links a[aria-current="page"] { color: var(--gold); }
-  .nav.is-open .links a[aria-current="page"]::after { display: none; }
-  .nav.is-open .links .sub { display: block; margin-top: 6px; font-size: 15px; font-weight: 400; letter-spacing: 0; line-height: 1.4; color: var(--ink-2); }
-  .nav.is-open .menu-foot { display: block; grid-column: 1 / -1; grid-row: 3; margin: 0; padding: 0 6px; font-size: 15px; color: var(--ink-2); }
-  .menu-foot a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+  .nav.is-open .nav-pill { height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 8px 22px 18px; }
+  .nav.is-open .links { grid-row: 2; display: flex; flex-direction: column; justify-content: center; gap: 4px; margin: 0; padding: 0; }
+  .nav.is-open .links a { padding: 12px 0; }
+  .links .t { font-size: 36px; }
+  .nav.is-open .menu-foot { grid-row: 3; margin: 0; }
 
   .section { padding: 48px 0; }
   .closing { padding: 48px 0 72px; }
@@ -300,7 +310,6 @@ html { -webkit-tap-highlight-color: transparent; }
   .nav .btn { min-height: 44px; }
   .nav-toggle { width: 44px; height: 44px; }
   .brand { min-height: 44px; padding-right: 6px; }
-  .links a { min-height: 44px; display: flex; align-items: center; }
   .textlink { display: inline-flex; align-items: center; min-height: 44px; }
   p .textlink { display: inline; min-height: 0; }
   .foot-in > a:first-child { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: -10px; }
@@ -308,20 +317,19 @@ html { -webkit-tap-highlight-color: transparent; }
   .textlink:active, .foot a:active { opacity: .6; }
 }
 /* Hover-only flourishes stay on devices that can hover, so a tap never leaves
-   a button stuck mid-roll or the logo stuck tilted. */
+   a button stuck in its hover colour or the logo stuck enlarged. */
 @media (hover: none) {
   .btn:hover { border-color: var(--line); background: transparent; }
   .btn-gold:hover { background: var(--gold); border-color: var(--gold); }
-  .btn:hover .roll > span { transform: none; }
-  .btn:hover .roll::after { transform: translateY(110%); }
   .brand:hover .lockup { transform: none; }
   .brand:active .lockup { transform: scale(0.97); }
 }
 
-@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   /* the pill opens downward into the panel, then the links rise in one by one */
   .nav.is-open .nav-pill { animation: sheet .5s var(--ease-quart); }
-  .nav.is-open .links a, .nav.is-open .menu-foot { animation: menu-in .55s var(--ease-quart) both; }
+  /* backwards, not both: once in, the links must be free to dim on hover */
+  .nav.is-open .links a, .nav.is-open .menu-foot { animation: menu-in .55s var(--ease-quart) backwards; }
   .nav.is-open .links a:nth-of-type(1) { animation-delay: .1s; }
   .nav.is-open .links a:nth-of-type(2) { animation-delay: .16s; }
   .nav.is-open .links a:nth-of-type(3) { animation-delay: .22s; }
@@ -330,5 +338,5 @@ html { -webkit-tap-highlight-color: transparent; }
   @keyframes menu-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 }
 @media (prefers-reduced-motion: reduce) {
-  .founder-photo img, .roll > span, .roll::after, .lockup, .links-hl { transition: none; }
+  .founder-photo img, .lockup, .links .t, .links a { transition: none; }
 }

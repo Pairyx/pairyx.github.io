@@ -1,7 +1,7 @@
-/* Pairyx: the floating nav (sliding link highlight, phone menu), the living
-   light inside the nav's P, the spinning ASCII "P" on the homepage, the founder
-   photo reveal on touch screens, and redirects for links to the old one-page
-   site's sections. */
+/* Pairyx: the floating nav (its menu, and the logo turning from gold to white
+   as the page scrolls), the living light inside the logo, the spinning ASCII
+   "P" on the homepage, the founder photo reveal on touch screens, and redirects
+   for links to the old one-page site's sections. */
 
 class PairyxSite {
   constructor(props){ this.props = props || {}; }
@@ -26,23 +26,23 @@ class PairyxSite {
 
   initNav(){
     const nav=document.getElementById('nav'); if(!nav) return;
-    const links=nav.querySelector('.links'), hl=nav.querySelector('.links-hl'), toggle=nav.querySelector('.nav-toggle');
+    const links=nav.querySelector('.links'), toggle=nav.querySelector('.nav-toggle'), lockup=nav.querySelector('.lockup');
     const handlers=[]; const on=(el,ev,fn,o)=>{ el.addEventListener(ev,fn,o); handlers.push(()=>el.removeEventListener(ev,fn,o)); };
-    // A soft pill slides to whichever link the pointer is on.
-    if(links&&hl){
-      const to=(a)=>{ hl.style.setProperty('--hl-x',a.offsetLeft+'px'); hl.style.setProperty('--hl-w',a.offsetWidth+'px'); hl.classList.add('is-on'); };
-      links.querySelectorAll('a').forEach(a=>on(a,'pointerenter',()=>to(a)));
-      on(links,'pointerleave',()=>hl.classList.remove('is-on'));
-    }
-    // The pill firms up once the page scrolls under it.
-    const onScroll=()=>nav.classList.toggle('is-scrolled',(window.scrollY||0)>8);
+    // The pill firms up once the page scrolls under it, and the logo turns from
+    // gold to white over the first stretch of the page.
+    let queued=false;
+    const onScroll=()=>{ if(queued) return; queued=true; requestAnimationFrame(()=>{ queued=false;
+      const y=window.scrollY||0; nav.classList.toggle('is-scrolled',y>8);
+      if(lockup) lockup.style.setProperty('--w',Math.min(1,y/(window.innerHeight*0.9)).toFixed(3));
+    }); };
     on(window,'scroll',onScroll,{passive:true}); onScroll();
-    // On a phone the links fold out of the pill.
+    // The menu opens out of the pill; links, Escape, or a click outside close it.
     if(toggle){
       const set=(open)=>{ nav.classList.toggle('is-open',open); document.documentElement.classList.toggle('menu-open',open); toggle.setAttribute('aria-expanded',String(open)); toggle.setAttribute('aria-label',open?'Close menu':'Menu'); };
       on(toggle,'click',()=>set(toggle.getAttribute('aria-expanded')!=='true'));
       if(links) on(links,'click',(e)=>{ if(e.target.closest('a')) set(false); });
       on(document,'keydown',(e)=>{ if(e.key==='Escape'&&nav.classList.contains('is-open')){ set(false); toggle.focus(); } });
+      on(document,'pointerdown',(e)=>{ if(nav.classList.contains('is-open')&&!e.target.closest('.nav-pill')) set(false); });
     }
     this._cleanup.push(()=>handlers.forEach(f=>f()));
   }
@@ -51,7 +51,7 @@ class PairyxSite {
   // and leans toward the pointer when it comes near the logo.
   initMark(){
     const svg=document.querySelector('.nav .lockup'), light=svg&&svg.querySelector('#px-light'); if(!light||this.cfg.reduceMotion) return;
-    const VW=92, VH=28; let px=-1e4, py=-1e4, lx=30, ly=8, id;
+    const VW=98, VH=30; let px=-1e4, py=-1e4, lx=30, ly=8, id;
     const onMove=(e)=>{ px=e.clientX; py=e.clientY; };
     window.addEventListener('pointermove',onMove,{passive:true}); this._cleanup.push(()=>window.removeEventListener('pointermove',onMove));
     const loop=(t)=>{ id=requestAnimationFrame(loop);

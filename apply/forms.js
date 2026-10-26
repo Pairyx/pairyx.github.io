@@ -128,7 +128,7 @@ export const CREATOR_FORM = [
   },
   {
     legend: 'Your audience',
-    note: 'Estimates from your platform analytics are fine — we do not expect exact figures.',
+    note: 'Estimates from your platform analytics are fine. We don’t expect exact figures.',
     fields: [
       { k: 'audience_age_primary', label: 'Largest age group', type: 'select',
         options: AGES, required: true },
@@ -156,7 +156,7 @@ export const CREATOR_FORM = [
         hint: 'Likes plus comments over reach. Leave blank if you are unsure.', placeholder: '6' },
       { k: 'avg_comments', label: 'Typical comments per post', type: 'number' },
       { k: 'retention_pct', label: 'Average view duration or retention (%)', type: 'number',
-        hint: 'Video creators — this is a strong signal for sponsored segments.', placeholder: '45' },
+        hint: 'For video creators, this is a strong signal for sponsored segments.', placeholder: '45' },
       { k: 'link_ctr', label: 'Click-through rate on links (%)', type: 'number',
         hint: 'Stories, description links, newsletter links.' },
       { k: 'best_performing', label: 'What has performed best recently, and why do you think it worked?',
@@ -175,7 +175,7 @@ export const CREATOR_FORM = [
         hint: 'Names are enough. Skip any you are under NDA about.' },
       { k: 'best_deal_story', label: 'Which partnership went best, and why?', type: 'textarea' },
       { k: 'results_data', label: 'Any numbers you can share', type: 'textarea',
-        hint: 'Clicks, code redemptions, conversions, ROAS — anything you have. This is what gets you a higher rate.' },
+        hint: 'Clicks, code redemptions, conversions, ROAS: anything you have. This is what gets you a higher rate.' },
       { k: 'uses_promo_codes', label: 'Do you use promo codes or affiliate links?', type: 'radio',
         options: YES_NO },
       { k: 'has_media_kit', label: 'Do you have a media kit?', type: 'radio', options: YES_NO },
@@ -348,7 +348,7 @@ export const BRAND_FORM = [
       { k: 'past_creators', label: 'Which creators?', type: 'textarea' },
       { k: 'what_worked', label: 'What worked?', type: 'textarea' },
       { k: 'what_didnt', label: 'What did not?', type: 'textarea',
-        hint: 'Genuinely useful — it stops us repeating it.' },
+        hint: 'Genuinely useful. It stops us repeating it.' },
       { k: 'past_results', label: 'Any numbers from those campaigns?', type: 'textarea',
         hint: 'ROAS, CPM, conversions, whatever you tracked.' },
       { k: 'why_now', label: 'Why are you looking now?', type: 'textarea' },
@@ -376,16 +376,16 @@ export const BRAND_FORM = [
 
 export const COPY = {
   brand: {
-    eyebrow: 'FOR BRANDS',
-    title: "Tell us what you're building.",
-    lede: 'Starred questions are the ones we need. Everything else sharpens the shortlist — answer what you can.',
-    done: "We'll read this properly and come back with creators who actually fit, plus why we picked each one.",
+    eyebrow: 'For brands',
+    title: 'Tell us what you’re building.',
+    lede: 'Starred questions are the ones we need. Everything else sharpens the shortlist, so answer what you can.',
+    done: 'We’ll read this properly and come back with creators who fit, and why we picked each one.',
   },
   creator: {
-    eyebrow: 'FOR CREATORS',
+    eyebrow: 'For creators',
     title: 'Tell us about your audience.',
-    lede: 'Starred questions are the ones we need. The rest is what gets you better deals — especially the performance numbers.',
-    done: "We'll come back when we have brands worth your name, with the reasoning laid out.",
+    lede: 'Starred questions are the ones we need. The rest is what gets you better deals, especially the performance numbers.',
+    done: 'We’ll come back when we have brands worth your name, with the reasoning laid out.',
   },
 }
 

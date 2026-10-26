@@ -221,7 +221,7 @@ var SCHEMA = {
           "k": "retention_pct",
           "label": "Average view duration or retention (%)",
           "type": "number",
-          "hint": "Video creators — this is a strong signal for sponsored segments."
+          "hint": "For video creators, this is a strong signal for sponsored segments."
         },
         {
           "k": "link_ctr",
@@ -264,7 +264,7 @@ var SCHEMA = {
           "k": "results_data",
           "label": "Any numbers you can share",
           "type": "textarea",
-          "hint": "Clicks, code redemptions, conversions, ROAS — anything you have. This is what gets you a higher rate."
+          "hint": "Clicks, code redemptions, conversions, ROAS: anything you have. This is what gets you a higher rate."
         },
         {
           "k": "uses_promo_codes",
@@ -612,7 +612,7 @@ var SCHEMA = {
           "k": "what_didnt",
           "label": "What did not?",
           "type": "textarea",
-          "hint": "Genuinely useful — it stops us repeating it."
+          "hint": "Genuinely useful. It stops us repeating it."
         },
         {
           "k": "past_results",

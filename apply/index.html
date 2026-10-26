@@ -3,59 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apply — Pairyx</title>
+<title>Apply | Pairyx</title>
 <meta name="description" content="Tell Pairyx about your brand or your audience. A few questions, and we come back with matches and the reasoning behind them.">
 <link rel="canonical" href="https://pairyx.co/apply/">
 <meta name="robots" content="noindex">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://pairyx.co/apply/">
-<meta property="og:title" content="Apply — Pairyx">
+<meta property="og:title" content="Apply | Pairyx">
 <meta property="og:description" content="Tell Pairyx about your brand or your audience.">
 <meta property="og:image" content="https://pairyx.co/uploads/pairyx-og.png?v=2">
-<meta name="theme-color" content="#071023">
+<meta name="theme-color" content="#0c0b09">
 <link rel="apple-touch-icon" href="../uploads/favicon-big.png?v=4">
 <link rel="icon" type="image/png" sizes="512x512" href="../uploads/favicon-big.png?v=4">
 <link rel="icon" type="image/png" sizes="any" href="../uploads/favicon-big.png?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="apply.css">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Schibsted+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=5">
+<link rel="stylesheet" href="apply.css?v=5">
 </head>
 <body>
 
-<!-- Same pill as the marketing site. Links point back to the homepage
-     sections with absolute paths, since this page lives one level down. -->
-<nav id="px-nav">
-  <div class="navwrap">
-    <div id="px-navpill">
-      <a class="px-navlogo" href="/"><img src="../uploads/PL-tight.png" alt="Pairyx"></a>
-      <span class="px-navdiv"></span>
-      <a href="/#why" class="px-navlink">Why Pairyx</a>
-      <a href="/#how" class="px-navlink">How it works</a>
-      <a href="/#founders" class="px-navlink">Founders</a>
-      <a href="/#sides" class="px-navlink">For creators</a>
-    </div>
-  </div>
-</nav>
+<a class="skip" href="#main">Skip to content</a>
 
-<main class="page">
+<!-- The header every page shares, without the Apply button: this is Apply. -->
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="/" aria-label="Pairyx home"><img src="/uploads/PL-tight.png" alt="" width="26" height="26"><span>Pairyx</span></a>
+    <nav class="links" aria-label="Main">
+      <a href="/how-it-works/">How it works</a>
+      <a href="/brands-and-creators/">Brands &amp; creators</a>
+      <a href="/about/">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page" id="main">
 
   <!-- ============================ pick a role ============================ -->
   <section id="view-role" class="view">
-    <p class="eyebrow">One question first</p>
     <h1>Which side are you on?</h1>
     <p class="lede">This decides what we ask you. It takes about five minutes either way.</p>
 
     <div class="roles">
       <button class="rolecard" type="button" data-role="brand">
-        <div class="tag">FOR BRANDS</div>
-        <div class="title">I'm looking for creators.</div>
+        <div class="title">I’m a brand looking for creators.</div>
         <p>Your product, who you want to reach, and what you can spend. Your budget is never shown
            to creators.</p>
       </button>
-      <button class="rolecard gold" type="button" data-role="creator">
-        <div class="tag">FOR CREATORS</div>
-        <div class="title">I'm looking for brands.</div>
+      <button class="rolecard" type="button" data-role="creator">
+        <div class="title">I’m a creator looking for brands.</div>
         <p>Your niche, who watches you, and the kinds of deals you'll take. We bring you brands
            worth your name.</p>
       </button>
@@ -64,25 +61,24 @@
 
   <!-- ============================ the form ============================ -->
   <section id="view-form" class="view" hidden>
-    <p class="eyebrow" id="form-eyebrow"></p>
     <h1 id="form-title"></h1>
     <p class="lede" id="form-lede"></p>
 
-    <p class="stepcount" id="step-count"></p>
+    <div class="formmeta"><span id="form-eyebrow"></span><span class="stepcount" id="step-count"></span></div>
     <div class="progress" aria-hidden="true"><span id="form-progress"></span></div>
 
     <form id="intake-form" novalidate>
       <div id="form-fields"></div>
 
-      <div id="form-error" class="callout warn" hidden></div>
+      <div id="form-error" class="callout warn" role="alert" hidden></div>
 
       <div class="actions">
-        <button class="btn" type="button" id="next-btn">Continue →</button>
-        <button class="btn" type="submit" id="submit-btn" hidden>Send my application</button>
+        <button class="btn btn-gold" type="button" id="next-btn">Continue</button>
+        <button class="btn btn-gold" type="submit" id="submit-btn" hidden>Send my application</button>
         <button class="btn ghost" type="button" id="back-btn">Back</button>
       </div>
       <p class="fineprint">
-        We use this to match you and to get in touch. We don't sell it or share it with anyone
+        We use this to match you and to get in touch. We don’t sell it or share it with anyone
         outside Pairyx.
       </p>
     </form>
@@ -90,16 +86,15 @@
 
   <!-- ============================ done ============================ -->
   <section id="view-done" class="view" hidden>
-    <p class="eyebrow">Received</p>
-    <h1>Got it — thank you.</h1>
+    <h1>Got it. Thank you.</h1>
     <p class="lede" id="done-lede"></p>
     <div class="callout">
-      <strong>What happens next.</strong> A Pairyx founder reads this by hand, not a filter. If
-      there's a fit we'll come back with specific matches and why we picked them. If there isn't,
-      we'll tell you that too.
+      <strong>What happens next.</strong> A Pairyx founder reads every application personally. If
+      there’s a fit, we’ll come back with specific matches and why we picked them. If there isn’t,
+      we’ll tell you that too.
     </div>
     <div class="actions">
-      <a class="btn" href="/">Back to Pairyx</a>
+      <a class="btn btn-gold" href="/">Back to Pairyx</a>
       <button class="btn ghost" type="button" id="another-btn">Submit another</button>
     </div>
   </section>
@@ -107,13 +102,16 @@
 </main>
 
 <footer class="foot">
-  <a href="/"><img src="../uploads/pairyxLogo-tight.png" alt="Pairyx"></a>
-  <div class="footlinks">
-    <a href="/#why">Why Pairyx</a>
-    <a href="/#how">How it works</a>
-    <a href="mailto:team@pairyx.co">team@pairyx.co</a>
+  <div class="wrap foot-in">
+    <a href="/" aria-label="Pairyx home"><img src="/uploads/PL-tight.png" alt="" width="24" height="24"></a>
+    <nav aria-label="Footer">
+      <a href="/how-it-works/">How it works</a>
+      <a href="/brands-and-creators/">Brands &amp; creators</a>
+      <a href="/about/">About</a>
+      <a href="mailto:team@pairyx.co">team@pairyx.co</a>
+    </nav>
+    <span>© 2026 Pairyx</span>
   </div>
-  <div class="copy">© 2026 Pairyx</div>
 </footer>
 
 <script type="module" src="apply.js"></script>

@@ -231,7 +231,7 @@ function commitStep() {
 
 function flagStep(firstBad) {
   const box = $('form-error')
-  box.textContent = 'A couple of answers are missing — they are marked below.'
+  box.textContent = 'A couple of answers are missing. They’re marked above.'
   box.hidden = false
   firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' })
   firstBad.querySelector('input, select, textarea')?.focus()
@@ -348,7 +348,7 @@ async function submit(e) {
   if (mail.status === 'rejected') {
     console.error('[apply] submission failed', mail.reason)
     errBox.textContent =
-      "We could not send that — please try again. If it keeps happening, email team@pairyx.co directly and we will take it from there."
+      'That didn’t send. Please try again, and if it keeps failing, email team@pairyx.co and we’ll take it from there.'
     errBox.hidden = false
     btn.disabled = false
     btn.textContent = 'Send my application'

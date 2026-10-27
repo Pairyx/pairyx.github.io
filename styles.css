@@ -172,7 +172,8 @@ p { margin: 0; }
 .status { display: inline-block; margin-top: 10px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); vertical-align: middle; }
 .status.is-live { border-color: rgba(249, 211, 138, 0.45); color: var(--gold); }
 dt .status { margin: 0 0 0 8px; }
-.terms-1 { margin-top: 28px; grid-template-columns: minmax(0, 1fr) !important; gap: 22px; }
+/* the single-column list under a paragraph; the double class beats .terms { margin: 0 } */
+.terms.terms-1 { margin-top: 32px; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 .sides-brief { margin-top: clamp(56px, 7vw, 88px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
 .sides-brief p { margin-top: 10px; color: var(--ink-2); max-width: 30em; }
 .sides-brief .textlink { display: inline-block; margin-top: 16px; }

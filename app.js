@@ -1,7 +1,8 @@
 /* Pairyx: the floating nav (its menu, and the logo turning from gold to white
    as the page scrolls), the living light inside the logo, the spinning ASCII
-   "P" on the homepage, the founder photo reveal on touch screens, and redirects
-   for links to the old one-page site's sections. */
+   "P" on the homepage, the founder photo reveal on touch screens, the platform
+   clips (playing only while on screen), and redirects for links to the old
+   one-page site's sections. */
 
 class PairyxSite {
   constructor(props){ this.props = props || {}; }
@@ -12,7 +13,7 @@ class PairyxSite {
     const safe = (fn) => { try { fn.call(this); } catch(e){ console.warn('px init', e); } };
     safe(this.initOldAnchors);
     safe(this.initNav);
-    requestAnimationFrame(() => { safe(this.initMark); safe(this.initAscii); safe(this.initFounders); });
+    requestAnimationFrame(() => { safe(this.initMark); safe(this.initAscii); safe(this.initFounders); safe(this.initClips); });
   }
   componentWillUnmount(){ (this._cleanup||[]).forEach(f => { try { f(); } catch(e){} }); }
 
@@ -136,6 +137,28 @@ class PairyxSite {
 
   // Hover shows a founder in colour. Touch screens have no hover, so there the
   // photo turns to colour once the card is mostly on screen.
+  // Each clip loads as it nears the screen and plays only while it's on it. The
+  // button pauses it for good; with reduced motion nothing plays until asked.
+  // Phones get the square close-up cut of each clip (name-m.mp4).
+  initClips(){
+    const figs=Array.from(document.querySelectorAll('.clip')); if(!figs.length) return;
+    const close=window.matchMedia('(max-width: 760px)').matches;
+    figs.forEach(fig=>{
+      const v=fig.querySelector('video'), btn=fig.querySelector('.clip-toggle'), bar=fig.querySelector('.clip-bar i');
+      if(close){ const src=v.querySelector('source'); v.poster=v.poster.replace(/\.jpg$/,'-m.jpg'); v.src=src.getAttribute('src').replace(/\.mp4$/,'-m.mp4'); }
+      let wanted=!this.cfg.reduceMotion, seen=false, raf=0;
+      const sync=()=>{ if(wanted&&seen){ if(v.paused) v.play().catch(()=>{}); } else if(!v.paused) v.pause(); };
+      const tick=()=>{ if(v.duration) bar.style.transform='scaleX('+(v.currentTime/v.duration)+')'; raf=v.paused?0:requestAnimationFrame(tick); };
+      v.addEventListener('play',()=>{ fig.classList.add('is-playing'); btn.setAttribute('aria-label','Pause'); if(!raf) raf=requestAnimationFrame(tick); });
+      v.addEventListener('pause',()=>{ fig.classList.remove('is-playing'); btn.setAttribute('aria-label','Play'); });
+      btn.addEventListener('click',()=>{ wanted=v.paused; if(wanted){ seen=true; v.preload='auto'; } sync(); });
+      const near=new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)){ v.preload='auto'; near.disconnect(); } },{rootMargin:'400px 0px'});
+      const on=new IntersectionObserver(es=>es.forEach(e=>{ seen=e.intersectionRatio>=0.35; sync(); }),{threshold:[0,0.35]});
+      near.observe(fig); on.observe(fig);
+      this._cleanup.push(()=>{ near.disconnect(); on.disconnect(); cancelAnimationFrame(raf); });
+    });
+  }
+
   initFounders(){
     const cards=Array.from(document.querySelectorAll('.founder')); if(!cards.length) return;
     if(!window.matchMedia('(hover: none)').matches) return;

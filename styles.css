@@ -112,7 +112,7 @@ p { margin: 0; }
 /* the menu */
 .links, .menu-foot { display: none; }
 .nav.is-open .nav-pill { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; border-radius: 30px; background: var(--black-2); padding-bottom: 26px; }
-.nav.is-open .links { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 32px; margin: 32px 0 0; padding-right: 18px; }
+.nav.is-open .links { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 32px; margin: 32px 0 0; padding-right: 18px; }
 .links a { display: block; padding: 6px 0; color: var(--ink); text-decoration: none; transition: opacity .35s var(--ease-quart); }
 .links .t { display: inline-block; font-size: clamp(30px, 3vw, 40px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; transition: transform .5s var(--ease-quart), color .3s; }
 .links .sub { display: block; margin-top: 8px; font-size: 15px; line-height: 1.4; color: var(--ink-2); transition: color .3s; }
@@ -127,6 +127,36 @@ p { margin: 0; }
   .links a:hover .sub { color: var(--ink); }
 }
 .links a:focus-visible .t { transform: translateX(12px); color: var(--gold); }
+
+/* ---------------------------------------------------------------- platform clips */
+
+/* Each clip: a short silent loop of the portal under a line of words, in a
+   column narrower than the page but wide enough that its screens stay legible.
+   The loop plays only while it's on screen (app.js), and can always be paused. */
+.clip-sec { padding: clamp(40px, 6vw, 80px) 0; }
+.clip-text, .clip { max-width: 800px; }
+.clip-text { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 14px 48px; align-items: end; margin-bottom: 28px; }
+.clip-text h2 { grid-column: 1; font-size: clamp(26px, 2.4vw, 34px); }
+.clip-text .status { grid-column: 1; justify-self: start; margin: 0; }
+.clip-text p { grid-column: 2; grid-row: 1 / span 2; max-width: 34em; color: var(--ink-2); }
+.clip { position: relative; margin: 0; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden; background: var(--black); border: 1px solid rgba(242, 238, 230, 0.1); }
+.clip video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.clip-toggle {
+  position: absolute; right: 14px; bottom: 16px; width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  border: 1px solid rgba(242, 238, 230, 0.18); background: rgba(12, 11, 9, 0.62); color: var(--ink);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity .3s, background-color .2s;
+}
+.clip:hover .clip-toggle, .clip-toggle:focus-visible, .clip:not(.is-playing) .clip-toggle { opacity: 1; }
+.clip-toggle:hover { background: rgba(12, 11, 9, 0.85); }
+.clip-toggle svg { grid-area: 1 / 1; width: 16px; height: 16px; fill: currentColor; }
+.clip-toggle .i-pause, .clip.is-playing .clip-toggle .i-play { display: none; }
+.clip.is-playing .clip-toggle .i-pause { display: block; }
+/* how far through the loop it is, as a hairline of gold */
+.clip-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(242, 238, 230, 0.08); }
+.clip-bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
+.clip-note { padding-top: 0; }
+.more { margin-top: 28px; }
 
 /* ---------------------------------------------------------------- page scaffolding */
 
@@ -238,7 +268,8 @@ dt .status { margin: 0 0 0 8px; }
 /* ---------------------------------------------------------------- responsive */
 
 @media (max-width: 1099px) {
-  .intro, .split { grid-template-columns: minmax(0, 1fr); }
+  .intro, .split, .clip-text { grid-template-columns: minmax(0, 1fr); }
+  .clip-text p { grid-column: 1; grid-row: auto; max-width: 36em; }
   .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* founders become wide cards, photo beside the words */
   .founders { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
@@ -288,6 +319,9 @@ dt .status { margin: 0 0 0 8px; }
   .steps li { grid-template-columns: 48px minmax(0, 1fr); gap: 0 16px; }
   .steps li::before { font-size: 36px; }
   .actions .btn { flex: 1 1 auto; }
+  .clip-sec { padding: 36px 0; }
+  .clip { border-radius: 16px; aspect-ratio: 1 / 1; }   /* the phone cut is square (app.js) */
+  @media (hover: none) { .clip-toggle { opacity: 1; } }
 }
 @media (max-width: 599px) {
   /* founders stack again: the photo leads, a little shorter than square */

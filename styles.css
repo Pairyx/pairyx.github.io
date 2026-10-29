@@ -102,6 +102,13 @@ p { margin: 0; }
 .lockup .s3 { stop-color: color-mix(in oklab, #b8823f, #d8d2c6 calc(var(--w) * 100%)); }
 .brand:hover .lockup { transform: scale(1.04); }
 .nav .btn { min-height: 40px; padding: 0 18px; }
+/* Log in: clients on their way to the portal. Quieter than Apply, which stays
+   the one gold action. With the menu open, and on phones too narrow for it
+   beside the logo, it sits in the menu's foot instead. */
+.nav-login { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 100px; color: var(--ink-2); font: 500 15px/1 var(--font); text-decoration: none; transition: color .2s, background-color .2s; }
+.nav-login:hover { color: var(--ink); background: var(--veil); }
+.nav.is-open .nav-login { display: none; }
+@media (max-width: 379px) { .nav-login { display: none; } }
 
 .nav-toggle { display: inline-flex; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; transition: border-color .2s, background-color .2s; }
 .nav-toggle:hover { border-color: rgba(242, 238, 230, 0.32); background: var(--veil); }
@@ -117,7 +124,7 @@ p { margin: 0; }
 .links .t { display: inline-block; font-size: clamp(30px, 3vw, 40px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; transition: transform .5s var(--ease-quart), color .3s; }
 .links .sub { display: block; margin-top: 8px; font-size: 15px; line-height: 1.4; color: var(--ink-2); transition: color .3s; }
 .links a[aria-current="page"] .t { color: var(--gold); }
-.nav.is-open .menu-foot { display: block; grid-column: 1 / -1; margin: 22px 0 0; font-size: 15px; color: var(--ink-2); }
+.nav.is-open .menu-foot { display: flex; flex-wrap: wrap; gap: 0 28px; grid-column: 1 / -1; margin: 22px 0 0; font-size: 15px; color: var(--ink-2); }
 .menu-foot a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; transition: color .2s; }
 .menu-foot a:hover { color: var(--ink); }
 /* pointing at a page slides its name along in gold and quiets the others */
@@ -344,6 +351,7 @@ html { -webkit-tap-highlight-color: transparent; }
   .nav .btn, .btn { min-height: 46px; }
   .nav .btn { min-height: 44px; }
   .nav-toggle { width: 44px; height: 44px; }
+  .nav-login { min-height: 44px; }
   .brand { min-height: 44px; padding-right: 6px; }
   .textlink { display: inline-flex; align-items: center; min-height: 44px; }
   p .textlink { display: inline; min-height: 0; }
